@@ -5,6 +5,8 @@
 import Foundation
 
 public class ThunkMiddleware<T: Feature>: Middleware {
+    public init() {}
+
     public func process(store: Store<T>, action: ReduxAction<T.Action>, next: @escaping Dispatch<ReduxAction<T.Action>>) {
         switch action {
         case .normal(let action):
