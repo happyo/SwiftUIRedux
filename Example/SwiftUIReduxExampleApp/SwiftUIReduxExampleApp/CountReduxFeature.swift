@@ -11,6 +11,7 @@ struct CountReduxFeature: Feature {
     struct State: Equatable {
         var count: Int = 0
         var isLoading: Bool = false
+        var text: String = ""
     }
     
     enum Action: Equatable {

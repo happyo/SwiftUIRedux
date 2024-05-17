@@ -32,6 +32,13 @@ struct ContentView: View {
                 Button("Change") {
                     fetchCount()
                 }
+                
+                TextField("Enter text", text: countStore.text)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .padding()
+
+                Text("You entered: \(countStore.state.text)")
+                                .padding()
             }
             
         }

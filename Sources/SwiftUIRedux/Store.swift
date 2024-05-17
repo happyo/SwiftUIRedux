@@ -20,6 +20,7 @@ public protocol StoreProtocol {
     func send(_ action: ReduxAction<Action>)
 }
 
+@dynamicMemberLookup
 public class Store<T: Feature>: ObservableObject, StoreProtocol {
     
     @Published private(set) public var state: T.State
@@ -36,6 +37,18 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
         middlewareChain.process(store: self, action: action)
     }
 
+    // MARK: - DynamicMemberLookup
+    public subscript<U>(dynamicMember keyPath: WritableKeyPath<T.State, U>) -> Binding<U> {
+        Binding(
+            get: { self.state[keyPath: keyPath] },
+            set: { newValue in
+                var newState = self.state
+                newState[keyPath: keyPath] = newValue
+                self.state = newState
+            }
+        )
+    }
+    
     fileprivate func reduce(action: T.Action) {
         DispatchQueue.main.async {
             self.state = self.reducer.reduce(oldState: self.state, action: action)
