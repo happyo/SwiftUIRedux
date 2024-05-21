@@ -7,10 +7,12 @@
 
 import SwiftUI
 import SwiftUIRedux
+import Combine
 
 struct ContentView: View {
     @ObservedObject var countStore: Store<CountReduxFeature> = StoreFactory.createStore()
-    
+    @State private var cancellable: AnyCancellable?
+
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea(.all)
@@ -41,6 +43,20 @@ struct ContentView: View {
                                 .padding()
             }
             
+        }
+        .onAppear {
+
+            cancellable = countStore.$state
+                .map { $0.isLoading }
+                .removeDuplicates()
+                .sink { state in
+                print("State changed: \(state)")
+            }
+
+            
+        }
+        .onDisappear {
+            cancellable?.cancel()
         }
     }
     

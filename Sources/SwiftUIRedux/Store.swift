@@ -37,6 +37,10 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
         middlewareChain.process(store: self, action: action)
     }
 
+    public func addMiddleware(_ middleware: AnyMiddleware<T>) {
+        middlewareChain.addMiddleware(middleware)
+    }
+
     // MARK: - DynamicMemberLookup
     public subscript<U>(dynamicMember keyPath: WritableKeyPath<T.State, U>) -> Binding<U> {
         Binding(
@@ -67,6 +71,10 @@ public class MiddlewareChain<T: Feature> {
         processMiddleware(index: 0, store: store, action: action)
     }
 
+    public func addMiddleware(_ middleware: AnyMiddleware<T>) {
+        middlewares.append(middleware)
+    }
+
     private func processMiddleware(index: Int, store: Store<T>, action: ReduxAction<T.Action>) {
         if index < middlewares.count {
             let middleware = middlewares[index]
@@ -74,7 +82,6 @@ public class MiddlewareChain<T: Feature> {
                 self.processMiddleware(index: index + 1, store: store, action: nextAction)
             }
         } else {
-            // 最后一个中间件后执行 reducer
             if case .normal(let normalAction) = action {
                 store.reduce(action: normalAction)
             }
@@ -132,4 +139,3 @@ public class TestStore<FeatureType: Feature> {
         assert(receivedActions == expectedActions, "Actions received by the store do not match the expected actions.")
     }
 }
-
