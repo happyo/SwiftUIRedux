@@ -6,7 +6,7 @@ import Combine
 
 public class ActionPublisherMiddleware<T: Feature>: Middleware {
     // 使用 PassthroughSubject 来发布 Action
-    let actionPublisher = PassthroughSubject<T.Action, Never>()
+    public let actionPublisher = PassthroughSubject<T.Action, Never>()
     
     public init() {}
 
