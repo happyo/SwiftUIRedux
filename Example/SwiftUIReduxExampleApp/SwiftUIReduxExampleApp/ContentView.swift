@@ -16,6 +16,11 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea(.all)
+            NavigationView {
+                
+            }.navigationDestination(for: String.self) { s in
+                EmptyView()
+            }
             
             VStack {
                 if countStore.state.isLoading {
