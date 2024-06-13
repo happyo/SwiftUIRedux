@@ -5,7 +5,7 @@
 import Foundation
 
 public protocol Feature {
-    associatedtype State: Equatable
+    associatedtype State
     associatedtype Action: Equatable
     associatedtype Reducer: ReducerProtocol where Reducer.State == State, Reducer.Action == Action
     
