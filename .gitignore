@@ -104,5 +104,6 @@ xcuserdata
 **/xcshareddata/WorkspaceSettings.xcsettings
 
 .swiftpm/
+*.DS_Store
 
 # End of https://www.toptal.com/developers/gitignore/api/xcode,swiftpm,swift
