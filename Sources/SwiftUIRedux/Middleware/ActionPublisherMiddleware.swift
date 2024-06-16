@@ -13,7 +13,9 @@ public class ActionPublisherMiddleware<T: Feature>: Middleware {
     public func process(store: Store<T>, action: ReduxAction<T.Action>, next: @escaping Dispatch<ReduxAction<T.Action>>) {
         // 将 action 发送到订阅者
         if case let .normal(action) = action {
-            actionPublisher.send(action)
+            DispatchQueue.main.async {
+                self.actionPublisher.send(action)
+            }
         }
         
         // 确保 action 继续向下传递到其他中间件或 reducer
