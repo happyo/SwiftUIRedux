@@ -6,7 +6,7 @@ import Foundation
 
 public protocol Feature {
     associatedtype State
-    associatedtype Action: Equatable
+    associatedtype Action
     associatedtype Reducer: ReducerProtocol where Reducer.State == State, Reducer.Action == Action
     
     static func initialState() -> State

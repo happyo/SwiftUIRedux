@@ -117,7 +117,7 @@ public class StoreFactory {
     }
 }
 
-public class TestStore<FeatureType: Feature> {
+public class TestStore<FeatureType: Feature> where FeatureType.Action: Equatable {
     private var reducer: FeatureType.Reducer
     private var state: FeatureType.State
     private var receivedActions: [FeatureType.Action] = []
