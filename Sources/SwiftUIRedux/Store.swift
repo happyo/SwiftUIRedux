@@ -115,6 +115,14 @@ public class StoreFactory {
             middlewares: FeatureType.middlewares()
         )
     }
+
+    public static func createStore<FeatureType: Feature>(otherMiddlewares: [AnyMiddleware<FeatureType>]) -> Store<FeatureType> {
+        return Store(
+            initialState: FeatureType.initialState(),
+            reducer: FeatureType.createReducer(),
+            middlewares: FeatureType.middlewares() + otherMiddlewares
+        )
+    }
 }
 
 public class TestStore<FeatureType: Feature> where FeatureType.Action: Equatable {
