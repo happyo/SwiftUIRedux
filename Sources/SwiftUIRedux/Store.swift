@@ -107,24 +107,6 @@ public struct AnyStore<T: Feature>: StoreProtocol {
     }
 }
 
-public class StoreFactory {
-    public static func createStore<FeatureType: Feature>() -> Store<FeatureType> {
-        return Store(
-            initialState: FeatureType.initialState(),
-            reducer: FeatureType.createReducer(),
-            middlewares: FeatureType.middlewares()
-        )
-    }
-
-    public static func createStore<FeatureType: Feature>(otherMiddlewares: [AnyMiddleware<FeatureType>]) -> Store<FeatureType> {
-        return Store(
-            initialState: FeatureType.initialState(),
-            reducer: FeatureType.createReducer(),
-            middlewares: FeatureType.middlewares() + otherMiddlewares
-        )
-    }
-}
-
 public class TestStore<FeatureType: Feature> where FeatureType.Action: Equatable {
     private var reducer: FeatureType.Reducer
     private var state: FeatureType.State

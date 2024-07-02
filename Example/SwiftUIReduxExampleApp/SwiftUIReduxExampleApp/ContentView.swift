@@ -10,17 +10,12 @@ import SwiftUIRedux
 import Combine
 
 struct ContentView: View {
-    @ObservedObject var countStore: Store<CountReduxFeature> = StoreFactory.createStore()
+    @ObservedObject var countStore: Store<CountReduxFeature> = StoreFactory.createStore(initialState: CountReduxFeature.State(count: 10))
     @State private var cancellable: AnyCancellable?
 
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea(.all)
-            NavigationView {
-                
-            }.navigationDestination(for: String.self) { s in
-                EmptyView()
-            }
             
             VStack {
                 if countStore.state.isLoading {
@@ -83,8 +78,4 @@ struct ContentView: View {
         countStore.send(.effect(fetchDataAction))
 //        countStore.send(.normal(.start))
     }
-}
-
-#Preview {
-    ContentView()
 }
