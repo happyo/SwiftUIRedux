@@ -10,9 +10,13 @@ import SwiftUIRedux
 import Combine
 
 struct ContentView: View {
-    @ObservedObject var countStore: Store<CountReduxFeature> = StoreFactory.createStore(initialState: CountReduxFeature.State(count: 10))
-    @State private var cancellable: AnyCancellable?
+    @ObservedObject var countStore: Store<CountReduxFeature>
+    let actionPublisherMiddleware: ActionPublisherMiddleware<CountReduxFeature>
 
+    init() {
+        actionPublisherMiddleware =  ActionPublisherMiddleware<CountReduxFeature>()
+        countStore =  StoreFactory.createStore(initialState: CountReduxFeature.State(count: 10), otherMiddlewares: [AnyMiddleware(actionPublisherMiddleware)])
+    }
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea(.all)
@@ -46,17 +50,18 @@ struct ContentView: View {
         }
         .onAppear {
 
-            cancellable = countStore.$state
-                .map { $0.isLoading }
-                .removeDuplicates()
-                .sink { state in
-                print("State changed: \(state)")
-            }
 
             
         }
         .onDisappear {
-            cancellable?.cancel()
+        }
+        .onReceive(actionPublisherMiddleware.actionPublisher) { action in
+            switch action {
+            case .decrease:
+                print("decrease")
+            default:
+                break
+            }
         }
     }
     
