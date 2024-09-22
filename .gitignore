@@ -105,5 +105,6 @@ xcuserdata
 
 .swiftpm/
 *.DS_Store
+.index-build/
 
 # End of https://www.toptal.com/developers/gitignore/api/xcode,swiftpm,swift
