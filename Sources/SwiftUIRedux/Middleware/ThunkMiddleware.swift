@@ -6,22 +6,26 @@ import Foundation
 
 @MainActor
 public class ThunkMiddleware<T: Feature>: Middleware {
+    public var next: AnyMiddleware<T>?
+
     public init() {}
 
-    public func process(store: Store<T>, action: ReduxAction<T.Action>) async {
+    public func process(store: Store<T>, action: ReduxAction<T.Action>) {
         switch action {
         case .normal:
             break
         case .effect(let effect):
             if let effectAction = effect as? ThunkEffectAction<T.State, T.Action> {
-                await effectAction.execute(
-                    dispatch: { action in
-                        await store.send(.normal(action))
-                    },
-                    getState: {
-                        await store.state
-                    }
-                )
+                Task {
+                    await effectAction.execute(
+                        dispatch: { action in
+                            await store.send(.normal(action))
+                        },
+                        getState: {
+                            await store.state
+                        }
+                    )
+                }
             }
         }
     }

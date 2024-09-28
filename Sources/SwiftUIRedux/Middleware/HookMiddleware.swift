@@ -7,6 +7,7 @@ import Foundation
 @MainActor
 public class HookMiddleware<T: Feature>: Middleware {
     public typealias Hook = (ReduxAction<T.Action>, T.State) -> Void
+    public var next: AnyMiddleware<T>?
 
     private var beforeSendHooks: [Hook] = []
     private var afterSendHooks: [Hook] = []
@@ -21,11 +22,15 @@ public class HookMiddleware<T: Feature>: Middleware {
         afterSendHooks.append(hook)
     }
 
-    public func process(store: Store<T>, action: ReduxAction<T.Action>) async {
+    public func process(store: Store<T>, action: ReduxAction<T.Action>) {
+        next?.process(store: store, action: action)
+    }
+    
+    public func beforeProcess(store: Store<T>, action: ReduxAction<T.Action>) {
         beforeSendHooks.forEach { $0(action, store.state) }
-
-        // 中间件链会自动继续，无需调用 next
-
+    }
+    
+    public func afterProcess(store: Store<T>, action: ReduxAction<T.Action>) {
         afterSendHooks.forEach { $0(action, store.state) }
     }
 }

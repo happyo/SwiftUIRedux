@@ -60,8 +60,9 @@ struct CountReduxFeature: Feature {
     
     static func middlewares() -> [AnyMiddleware<Self>] {
         let thunkMiddleware = ThunkMiddleware<CountReduxFeature>()
+        let loggingMiddleware = LoggingMiddleware<CountReduxFeature>()
         
-        return [AnyMiddleware(thunkMiddleware)]
+        return [AnyMiddleware(thunkMiddleware), AnyMiddleware(loggingMiddleware)]
 //        return []
     }
 }

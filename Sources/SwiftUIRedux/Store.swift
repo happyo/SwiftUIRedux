@@ -36,9 +36,7 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     }
 
     public func send(_ action: ReduxAction<T.Action>) {
-        Task {
-            await middlewareChain.process(store: self, action: action)
-        }
+        middlewareChain.process(store: self, action: action)
     }
 
     public func addMiddleware(_ middleware: AnyMiddleware<T>) {
@@ -64,24 +62,56 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
 
 @MainActor
 public class MiddlewareChain<T: Feature> {
-    private var middlewares: [AnyMiddleware<T>] = []
+    private var head: AnyMiddleware<T>?
 
     public init(middlewares: [AnyMiddleware<T>] = []) {
-        self.middlewares = middlewares
+        if !middlewares.isEmpty {
+            head = middlewares.first
+            var current = head
+            for i in 1..<middlewares.count {
+                current?.next = middlewares[i]
+                current = middlewares[i]
+            }
+        }
     }
 
     public func addMiddleware(_ middleware: AnyMiddleware<T>) {
-        middlewares.append(middleware)
+        if head == nil {
+            head = middleware
+        } else {
+            var current = head
+            while current?.next != nil {
+                current = current?.next
+            }
+            current?.next = middleware
+        }
     }
 
-    public func process(store: Store<T>, action: ReduxAction<T.Action>) async {
-        for middleware in middlewares {
-            await middleware.process(store: store, action: action)
-        }
+    public func process(store: Store<T>, action: ReduxAction<T.Action>) {
+        executeBeforeProcessHooks(store: store, action: action)
 
-        // 所有中间件处理完毕，调用 reducer
+        head?.process(store: store, action: action)
+
         if case .normal(let normalAction) = action {
             store.reduce(action: normalAction)
+        }
+
+        executeAfterProcessHooks(store: store, action: action)
+    }
+
+    private func executeBeforeProcessHooks(store: Store<T>, action: ReduxAction<T.Action>) {
+        var current = head
+        while current != nil {
+            current?.beforeProcess(store: store, action: action)
+            current = current?.next
+        }
+    }
+
+    private func executeAfterProcessHooks(store: Store<T>, action: ReduxAction<T.Action>) {
+        var current = head
+        while current != nil {
+            current?.afterProcess(store: store, action: action)
+            current = current?.next
         }
     }
 }
