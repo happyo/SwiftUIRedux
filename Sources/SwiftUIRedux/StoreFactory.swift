@@ -5,8 +5,10 @@
 import SwiftUI
 
 public class StoreFactory {
+    @MainActor
     public static func createStore<FeatureType: Feature>(
-        initialState: FeatureType.State? = nil, defaultReducer: FeatureType.Reducer? = nil, otherMiddlewares: [AnyMiddleware<FeatureType>] = []
+        initialState: FeatureType.State? = nil, defaultReducer: FeatureType.Reducer? = nil,
+        otherMiddlewares: [AnyMiddleware<FeatureType>] = []
     ) -> Store<FeatureType> {
         return Store(
             initialState: initialState ?? FeatureType.initialState(),

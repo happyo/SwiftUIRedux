@@ -10,12 +10,18 @@ import SwiftUIRedux
 import Combine
 
 struct ContentView: View {
-    @ObservedObject var countStore: Store<CountReduxFeature>
+    @StateObject var countStore: Store<CountReduxFeature>
     let actionPublisherMiddleware: ActionPublisherMiddleware<CountReduxFeature>
 
     init() {
-        actionPublisherMiddleware =  ActionPublisherMiddleware<CountReduxFeature>()
-        countStore =  StoreFactory.createStore(initialState: CountReduxFeature.State(count: 10), otherMiddlewares: [AnyMiddleware(actionPublisherMiddleware)])
+        let middleware = ActionPublisherMiddleware<CountReduxFeature>()
+        self.actionPublisherMiddleware = middleware
+
+        // 在属性声明时使用闭包初始化 @StateObject
+        self._countStore = StateObject(wrappedValue: StoreFactory.createStore(
+            initialState: CountReduxFeature.State(count: 10),
+            otherMiddlewares: [AnyMiddleware(middleware)]
+        ))
     }
     var body: some View {
         ZStack {
@@ -68,17 +74,14 @@ struct ContentView: View {
     func fetchCount() {
         // 发送异步 EffectAction
         let fetchDataAction = ThunkEffectAction<CountReduxFeature.State, CountReduxFeature.Action> { dispatch, getState in
-            DispatchQueue.main.async {
-                dispatch(.start)  // Dispatch success action
-            }
+            await dispatch(.start)  // Dispatch success action
             
-            DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: {
-                // Simulate fetching data
-                let data = 4
-                DispatchQueue.main.async {
-                    dispatch(.success(data))  // Dispatch success action
-                }
-            })
+            // 模拟延迟 2 秒
+            try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+
+            // 模拟获取数据
+            let data = 4
+            await dispatch(.success(data))  // Dispatch success action
         }
         countStore.send(.effect(fetchDataAction))
 //        countStore.send(.normal(.start))

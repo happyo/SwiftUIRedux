@@ -4,38 +4,59 @@
 
 import Foundation
 
+@MainActor
 public class ThunkMiddleware<T: Feature>: Middleware {
     public init() {}
 
-    public func process(store: Store<T>, action: ReduxAction<T.Action>, next: @escaping Dispatch<ReduxAction<T.Action>>) {
+    public func process(store: Store<T>, action: ReduxAction<T.Action>) async {
         switch action {
-        case .normal(let action):
-            next(.normal(action))
+        case .normal:
+            break
         case .effect(let effect):
             if let effectAction = effect as? ThunkEffectAction<T.State, T.Action> {
-                effectAction.execute(dispatch: { next(.normal($0)) }, getState: { store.state })
-            } else {
-                next(.effect(effect))
+                await effectAction.execute(
+                    dispatch: { action in
+                        await store.send(.normal(action))
+                    },
+                    getState: {
+                        await store.state
+                    }
+                )
             }
         }
     }
 }
 
 public protocol ThunkEffectActionProtocol: EffectAction {
-    associatedtype State
-    associatedtype Action
+    associatedtype State: Sendable
+    associatedtype Action: Sendable
 
-    func execute(dispatch: @escaping (Action) -> Void, getState: @escaping () -> State)
+    func execute(
+        dispatch: @escaping @Sendable (Action) async -> Void,
+        getState: @escaping @Sendable () async -> State
+    ) async
 }
 
-public struct ThunkEffectAction<State, Action>: ThunkEffectActionProtocol {
-    private let _execute: (@escaping (Action) -> Void, @escaping () -> State) -> Void
+public struct ThunkEffectAction<State: Sendable, Action: Sendable>: ThunkEffectActionProtocol,
+    Sendable
+{
+    private let _execute:
+        @Sendable (
+            @escaping @Sendable (Action) async -> Void, @escaping @Sendable () async -> State
+        ) async -> Void
 
-    public init(execute: @escaping (@escaping (Action) -> Void, @escaping () -> State) -> Void) {
+    public init(
+        execute: @escaping @Sendable (
+            @escaping @Sendable (Action) async -> Void, @escaping @Sendable () async -> State
+        ) async -> Void
+    ) {
         self._execute = execute
     }
 
-    public func execute(dispatch: @escaping (Action) -> Void, getState: @escaping () -> State) {
-        _execute(dispatch, getState)
+    public func execute(
+        dispatch: @escaping @Sendable (Action) async -> Void,
+        getState: @escaping @Sendable () async -> State
+    ) async {
+        await _execute(dispatch, getState)
     }
 }

@@ -4,6 +4,7 @@
 
 import Foundation
 
+@MainActor
 public class HookMiddleware<T: Feature>: Middleware {
     public typealias Hook = (ReduxAction<T.Action>, T.State) -> Void
 
@@ -20,10 +21,10 @@ public class HookMiddleware<T: Feature>: Middleware {
         afterSendHooks.append(hook)
     }
 
-    public func process(store: Store<T>, action: ReduxAction<T.Action>, next: @escaping Dispatch<ReduxAction<T.Action>>) {
+    public func process(store: Store<T>, action: ReduxAction<T.Action>) async {
         beforeSendHooks.forEach { $0(action, store.state) }
 
-        next(action)
+        // 中间件链会自动继续，无需调用 next
 
         afterSendHooks.forEach { $0(action, store.state) }
     }
