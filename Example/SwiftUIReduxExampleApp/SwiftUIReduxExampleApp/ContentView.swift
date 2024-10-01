@@ -12,15 +12,22 @@ import Combine
 struct ContentView: View {
     @StateObject var countStore: Store<CountReduxFeature>
     let actionPublisherMiddleware: ActionPublisherMiddleware<CountReduxFeature>
+    let hookMiddleware: HookMiddleware<CountReduxFeature>
 
     init() {
         let middleware = ActionPublisherMiddleware<CountReduxFeature>()
         self.actionPublisherMiddleware = middleware
+        
+        let hookMiddleware = HookMiddleware<CountReduxFeature>()
+        hookMiddleware.addAfterSendHook { action, state in
+            print("hook action \(action)")
+        }
+        self.hookMiddleware = hookMiddleware
 
         // 在属性声明时使用闭包初始化 @StateObject
         self._countStore = StateObject(wrappedValue: StoreFactory.createStore(
             initialState: CountReduxFeature.State(count: 10),
-            otherMiddlewares: [AnyMiddleware(middleware)]
+            otherMiddlewares: [AnyMiddleware(middleware), AnyMiddleware(hookMiddleware)]
         ))
     }
     var body: some View {
