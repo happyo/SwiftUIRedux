@@ -8,13 +8,13 @@
 import SwiftUIRedux
 
 struct CountReduxFeature: Feature {
-    struct State: Equatable {
+    struct State {
         var count: Int = 0
         var isLoading: Bool = false
         var text: String = ""
     }
     
-    enum Action: Equatable {
+    enum Action {
         
         case increase
         case decrease
@@ -22,10 +22,6 @@ struct CountReduxFeature: Feature {
         case start
         case success(Int)
         case error(String)
-        
-        func isStartAction() -> Bool {
-            return self == .start
-        }
     }
     
     struct Reducer: ReducerProtocol {

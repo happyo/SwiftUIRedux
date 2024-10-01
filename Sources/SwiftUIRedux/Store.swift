@@ -15,8 +15,8 @@ public enum ReduxAction<Action: Sendable>: Sendable {
 
 @MainActor
 public protocol StoreProtocol {
-    associatedtype State: Sendable
-    associatedtype Action: Sendable
+    associatedtype State
+    associatedtype Action
     var state: State { get }
     func send(_ action: ReduxAction<Action>)
 }
