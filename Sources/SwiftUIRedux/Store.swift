@@ -4,11 +4,11 @@
 
 import SwiftUI
 
-public protocol EffectAction: Sendable {
+public protocol EffectAction {
 
 }
 
-public enum ReduxAction<Action: Sendable>: Sendable {
+public enum ReduxAction<Action> {
     case normal(Action)
     case effect(EffectAction)
 }

@@ -7,11 +7,16 @@
 
 import SwiftUIRedux
 
+struct SomeModel {
+    var a: Int
+}
+
 struct CountReduxFeature: Feature {
     struct State {
         var count: Int = 0
         var isLoading: Bool = false
         var text: String = ""
+        var someModel: SomeModel = SomeModel(a: 1)
     }
     
     enum Action {
@@ -22,6 +27,7 @@ struct CountReduxFeature: Feature {
         case start
         case success(Int)
         case error(String)
+        case passSomeModel(SomeModel)
     }
     
     struct Reducer: ReducerProtocol {
@@ -40,6 +46,8 @@ struct CountReduxFeature: Feature {
                 newState.count = count
             case .error(_):
                 newState.isLoading = false
+            case .passSomeModel(let model):
+                newState.someModel = model
             }
             
             return newState

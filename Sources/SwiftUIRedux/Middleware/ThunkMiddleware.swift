@@ -16,51 +16,38 @@ public class ThunkMiddleware<T: Feature>: Middleware {
             break
         case .effect(let effect):
             if let effectAction = effect as? ThunkEffectAction<T.State, T.Action> {
-                Task {
-                    await effectAction.execute(
-                        dispatch: { action in
-                            await store.send(.normal(action))
-                        },
-                        getState: {
-                            await store.state
-                        }
-                    )
-                }
+                effectAction.execute(
+                    dispatch: { action in
+                        store.send(.normal(action))
+                    },
+                    getState: {
+                        store.state
+                    }
+                )
             }
         }
     }
 }
 
-public protocol ThunkEffectActionProtocol: EffectAction {
-    associatedtype State: Sendable
-    associatedtype Action: Sendable
-
-    func execute(
-        dispatch: @escaping @Sendable (Action) async -> Void,
-        getState: @escaping @Sendable () async -> State
-    ) async
-}
-
-public struct ThunkEffectAction<State: Sendable, Action: Sendable>: ThunkEffectActionProtocol,
-    Sendable
-{
+@MainActor
+public struct ThunkEffectAction<State, Action>: EffectAction {
     private let _execute:
-        @Sendable (
-            @escaping @Sendable (Action) async -> Void, @escaping @Sendable () async -> State
-        ) async -> Void
+        (
+            @escaping (Action) -> Void, @escaping () -> State
+        ) -> Void
 
     public init(
-        execute: @escaping @Sendable (
-            @escaping @Sendable (Action) async -> Void, @escaping @Sendable () async -> State
-        ) async -> Void
+        execute: @escaping (
+            @escaping (Action) -> Void, @escaping () -> State
+        ) -> Void
     ) {
         self._execute = execute
     }
 
     public func execute(
-        dispatch: @escaping @Sendable (Action) async -> Void,
-        getState: @escaping @Sendable () async -> State
-    ) async {
-        await _execute(dispatch, getState)
+        dispatch: @escaping (Action) -> Void,
+        getState: @escaping () -> State
+    ) {
+        _execute(dispatch, getState)
     }
 }

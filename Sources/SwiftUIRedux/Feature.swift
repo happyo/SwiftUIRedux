@@ -6,8 +6,8 @@ import Foundation
 
 @MainActor
 public protocol Feature {
-    associatedtype State: Sendable
-    associatedtype Action: Sendable
+    associatedtype State
+    associatedtype Action
     associatedtype Reducer: ReducerProtocol where Reducer.State == State, Reducer.Action == Action
 
     static func initialState() -> State
