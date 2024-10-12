@@ -4,6 +4,7 @@
 
 import Foundation
 
+@MainActor
 public protocol ReducerProtocol<State, Action> {
     associatedtype State
     associatedtype Action

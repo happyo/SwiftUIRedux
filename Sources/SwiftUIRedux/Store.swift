@@ -145,6 +145,7 @@ public class TestStore<FeatureType: Feature> where FeatureType.Action: Equatable
         self.state = initialState
     }
 
+    @MainActor
     public func send(
         _ action: FeatureType.Action, expectedStateChanges: (FeatureType.State) -> Bool
     ) {
