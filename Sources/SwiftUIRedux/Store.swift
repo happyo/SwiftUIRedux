@@ -39,6 +39,14 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
         middlewareChain.process(store: self, action: action)
     }
 
+    public func send(_ action: ReduxAction<T.Action>, animation: Animation) {
+        middlewareChain.process(store: self, action: action, animation: animation)
+    }
+
+    public func send(_ action: ReduxAction<T.Action>, transaction: Transaction) {
+        middlewareChain.process(store: self, action: action, transaction: transaction)
+    }
+
     public func addMiddleware(_ middleware: AnyMiddleware<T>) {
         middlewareChain.addMiddleware(middleware)
     }
@@ -55,8 +63,20 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
         )
     }
 
-    fileprivate func reduce(action: T.Action) {
-        self.state = self.reducer.reduce(oldState: self.state, action: action)
+    fileprivate func reduce(action: T.Action, animation: Animation? = nil) {
+        if let animation = animation {
+            withAnimation(animation) {
+                self.state = self.reducer.reduce(oldState: self.state, action: action)
+            }
+        } else {
+            self.state = self.reducer.reduce(oldState: self.state, action: action)
+        }
+    }
+
+    fileprivate func reduce(action: T.Action, transaction: Transaction) {
+        withTransaction(transaction) {
+            self.state = self.reducer.reduce(oldState: self.state, action: action)
+        }
     }
 }
 
@@ -87,13 +107,26 @@ public class MiddlewareChain<T: Feature> {
         }
     }
 
-    public func process(store: Store<T>, action: ReduxAction<T.Action>) {
+    public func process(store: Store<T>, action: ReduxAction<T.Action>, animation: Animation? = nil)
+    {
         executeBeforeProcessHooks(store: store, action: action)
 
         head?.process(store: store, action: action)
 
         if case .normal(let normalAction) = action {
-            store.reduce(action: normalAction)
+            store.reduce(action: normalAction, animation: animation)
+        }
+
+        executeAfterProcessHooks(store: store, action: action)
+    }
+
+    public func process(store: Store<T>, action: ReduxAction<T.Action>, transaction: Transaction) {
+        executeBeforeProcessHooks(store: store, action: action)
+
+        head?.process(store: store, action: action)
+
+        if case .normal(let normalAction) = action {
+            store.reduce(action: normalAction, transaction: transaction)
         }
 
         executeAfterProcessHooks(store: store, action: action)

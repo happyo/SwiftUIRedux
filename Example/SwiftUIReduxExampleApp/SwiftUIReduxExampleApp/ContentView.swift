@@ -42,7 +42,7 @@ struct ContentView: View {
                 
                 Text("Counter: \(countStore.state.count)")
                 Button("increase") {
-                    countStore.send(.normal(.increase))
+                    countStore.send(.normal(.increase), animation: .easeInOut(duration: 1))
                 }
                 Button("decrease") {
                     countStore.send(.normal(.decrease))
