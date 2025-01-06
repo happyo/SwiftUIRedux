@@ -2,7 +2,7 @@
 //  Created by belyenochi on 2024/05/16.
 //
 
-import Foundation
+import SwiftUI
 
 @MainActor
 public class ThunkMiddleware<T: Feature>: Middleware {
@@ -24,6 +24,18 @@ public class ThunkMiddleware<T: Feature>: Middleware {
                         store.state
                     }
                 )
+            } else if let animationEffectAction = effect as? ThunkAnimationEffectAction<T.State, T.Action> {
+                animationEffectAction.execute { action, animation in
+                    store.send(.normal(action), animation: animation)
+                } getState: {
+                    store.state
+                }
+            } else if let transactionEffectAction = effect as? ThunkTransactionEffectAction<T.State, T.Action> {
+                transactionEffectAction.execute { action, transaction in
+                    store.send(.normal(action), transaction: transaction)
+                } getState: {
+                    store.state
+                }
             }
         }
     }
@@ -46,6 +58,52 @@ public struct ThunkEffectAction<State, Action>: EffectAction {
 
     public func execute(
         dispatch: @escaping (Action) -> Void,
+        getState: @escaping () -> State
+    ) {
+        _execute(dispatch, getState)
+    }
+}
+
+@MainActor
+public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
+    private let _execute:
+        (
+            @escaping (Action, Animation?) -> Void, @escaping () -> State
+        ) -> Void
+
+    public init(
+        execute: @escaping (
+            @escaping (Action, Animation?) -> Void, @escaping () -> State
+        ) -> Void
+    ) {
+        self._execute = execute
+    }
+
+    public func execute(
+        dispatch: @escaping (Action, Animation?) -> Void,
+        getState: @escaping () -> State
+    ) {
+        _execute(dispatch, getState)
+    }
+}
+
+@MainActor
+public struct ThunkTransactionEffectAction<State, Action>: EffectAction {
+    private let _execute:
+        (
+            @escaping (Action, Transaction?) -> Void, @escaping () -> State
+        ) -> Void
+
+    public init(
+        execute: @escaping (
+            @escaping (Action, Transaction?) -> Void, @escaping () -> State
+        ) -> Void
+    ) {
+        self._execute = execute
+    }
+
+    public func execute(
+        dispatch: @escaping (Action, Transaction?) -> Void,
         getState: @escaping () -> State
     ) {
         _execute(dispatch, getState)

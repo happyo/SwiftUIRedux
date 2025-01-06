@@ -80,16 +80,16 @@ struct ContentView: View {
     
     func fetchCount() {
         // 发送异步 EffectAction
-        let fetchDataAction = ThunkEffectAction<CountReduxFeature.State, CountReduxFeature.Action> { dispatch, getState in
-            dispatch(.start)  // Dispatch success action
+        let fetchDataAction = ThunkAnimationEffectAction<CountReduxFeature.State, CountReduxFeature.Action> { dispatch, getState in
+            dispatch(.start, nil)  // Dispatch success action
             let someModel = SomeModel(a: 2)
 //
 //            // 模拟延迟 2 秒
             Task {
                 try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
                 let data = 4
-                dispatch(.success(data))  // Dispatch success action
-                dispatch(.passSomeModel(someModel))
+                dispatch(.success(data), .easeInOut(duration: 2))  // Dispatch success action
+                dispatch(.passSomeModel(someModel), nil)
             }
 //
 //            // 模拟获取数据
