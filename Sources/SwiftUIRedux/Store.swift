@@ -26,19 +26,26 @@ public protocol StoreProtocol {
 public class Store<T: Feature>: ObservableObject, StoreProtocol {
 
     @Published private(set) public var state: T.State
-    public var internalState: T.InternalState
+    public var internalState: T.InternalState?
     private var reducer: T.Reducer
     private var middlewareChain: MiddlewareChain<T>
 
     public init(initialState: T.State, reducer: T.Reducer, middlewares: [AnyMiddleware<T>] = []) {
         self.state = initialState
-        self.internalState = T.createInternalState()
+        if !(T.InternalState.self == Void.self) {
+            self.internalState = T.createInternalState()
+        } else {
+            self.internalState = nil
+        }
         self.reducer = reducer
         self.middlewareChain = MiddlewareChain(middlewares: middlewares)
     }
 
-    public func withInternalState<R>(_ transform: (inout T.InternalState) -> R) -> R {
-        return transform(&internalState)
+    public func withInternalState<R>(_ transform: (inout T.InternalState) -> R) -> R? {
+        if var state = internalState {
+            return transform(&state)
+        }
+        return nil
     }
 
     public func send(_ action: ReduxAction<T.Action>) {
