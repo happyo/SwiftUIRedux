@@ -30,10 +30,10 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     private var reducer: T.Reducer
     private var middlewareChain: MiddlewareChain<T>
 
-    public init(initialState: T.State, reducer: T.Reducer, middlewares: [AnyMiddleware<T>] = []) {
+    public init(initialState: T.State, reducer: T.Reducer, middlewares: [AnyMiddleware<T>] = [], internalState: T.InternalState? = nil) {
         self.state = initialState
         if T.InternalState.self != Void.self {
-            self.internalState = (T.self as! any Feature).createInternalState() as? T.InternalState
+            self.internalState = internalState
         } else {
             self.internalState = nil
         }

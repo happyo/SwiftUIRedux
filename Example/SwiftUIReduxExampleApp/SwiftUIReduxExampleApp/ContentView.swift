@@ -41,7 +41,7 @@ struct ContentView: View {
                 }
                 
                 Text("Counter: \(countStore.state.count)")
-                Text("InternalState: \(countStore.internalState.analyticsData)")
+//                Text("InternalState: \(countStore.internalState?.analyticsData)")
                 Button("increase") {
                     countStore.send(.normal(.increase), animation: .easeInOut(duration: 1))
                 }
@@ -50,8 +50,8 @@ struct ContentView: View {
                 }
                 
                 Button("Change internal state") {
-                    countStore.internalState.analyticsData = ["hah" : 1]
-                    print(countStore.internalState.analyticsData)
+//                    countStore.internalState?.analyticsData = ["hah" : 1]
+//                    print(countStore.internalState?.analyticsData)
                 }
                 
                 Button("Change") {

@@ -16,11 +16,11 @@ struct MyInternalState {
 }
 
 struct CountReduxFeature: Feature {
-    typealias InternalState = MyInternalState
-    
-    static func createInternalState() -> MyInternalState {
-        return MyInternalState()
-    }
+//    typealias InternalState = MyInternalState
+//    
+//    static func createInternalState() -> MyInternalState {
+//        return MyInternalState()
+//    }
     
     struct State {
         var count: Int = 0
