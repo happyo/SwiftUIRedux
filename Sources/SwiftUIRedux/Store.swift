@@ -26,7 +26,7 @@ public protocol StoreProtocol {
 public class Store<T: Feature>: ObservableObject, StoreProtocol {
 
     @Published private(set) public var state: T.State
-    private var internalState: T.InternalState
+    public var internalState: T.InternalState
     private var reducer: T.Reducer
     private var middlewareChain: MiddlewareChain<T>
 

@@ -11,7 +11,17 @@ struct SomeModel {
     var a: Int
 }
 
+struct MyInternalState {
+    var analyticsData: [String: Any] = [:]
+}
+
 struct CountReduxFeature: Feature {
+    typealias InternalState = MyInternalState
+    
+    static func createInternalState() -> MyInternalState {
+        return MyInternalState()
+    }
+    
     struct State {
         var count: Int = 0
         var isLoading: Bool = false
