@@ -14,7 +14,10 @@ public protocol Feature {
     static func initialState() -> State
     static func createReducer() -> Reducer
     static func middlewares() -> [AnyMiddleware<Self>]
+}
+
+public extension Feature where InternalState == Void {
     static func createInternalState() -> InternalState {
-        return () as! InternalState
+        return ()
     }
 }
