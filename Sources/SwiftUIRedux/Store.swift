@@ -32,8 +32,8 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
 
     public init(initialState: T.State, reducer: T.Reducer, middlewares: [AnyMiddleware<T>] = []) {
         self.state = initialState
-        if !(T.InternalState.self == Void.self) {
-            self.internalState = T.createInternalState()
+        if T.InternalState.self != Void.self {
+            self.internalState = (T.self as! any Feature).createInternalState() as? T.InternalState
         } else {
             self.internalState = nil
         }
