@@ -10,65 +10,17 @@ import SwiftUIRedux
 import Combine
 
 struct ContentView: View {
-    @StateObject var countStore: Store<CountReduxFeature>
-    let actionPublisherMiddleware: ActionPublisherMiddleware<CountReduxFeature>
-    let hookMiddleware: HookMiddleware<CountReduxFeature>
-
-    init() {
-        let middleware = ActionPublisherMiddleware<CountReduxFeature>()
-        self.actionPublisherMiddleware = middleware
-        
-        let hookMiddleware = HookMiddleware<CountReduxFeature>()
-        hookMiddleware.addAfterSendHook { action, state in
-            print("hook action \(action)")
-        }
-        self.hookMiddleware = hookMiddleware
-        let store = StoreFactory.createStore(
-            initialState: CountReduxFeature.State(count: 10),
-            otherMiddlewares: [AnyMiddleware(middleware), AnyMiddleware(hookMiddleware)]
-        )
-
-        // 在属性声明时使用闭包初始化 @StateObject
-        self._countStore = StateObject(wrappedValue: store)
-    }
     var body: some View {
-        ZStack {
-            Color.white.ignoresSafeArea(.all)
-            
-            VStack {
-                if countStore.state.isLoading {
-                    ProgressView()
-                        .frame(width: 100, height: 100)
-                }
-                
-                Text("Counter: \(countStore.state.count)")
-//                Text("InternalState: \(countStore.internalState?.analyticsData)")
-                Button("increase") {
-                    countStore.send(.increase, animation: .easeInOut(duration: 1))
-                }
-                Button("decrease") {
-                    countStore.send(.decrease)
-                }
-                
-                
-                Button("Change internal state") {
-//                    countStore.internalState?.analyticsData = ["hah" : 1]
-//                    print(countStore.internalState?.analyticsData)
-                }
-                
-                Button("Change") {
-                    fetchCount()
-                }
-                
-                TextField("Enter text", text: countStore.text)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .padding()
-
-                Text("You entered: \(countStore.state.text)")
-                                .padding()
+        NavigationStack {
+            List {
+                NavigationLink("基础计数器示例", destination: BasicCounterView())
+                NavigationLink("异步效果示例", destination: EffectCounterView())
+                NavigationLink("混合状态示例", destination: InternalStateExampleView())
+                NavigationLink("动画计数器示例", destination: AnimatedCounterView())
             }
-            
+            .navigationTitle("Redux 示例集")
         }
+    }
         .onAppear {
 
 
