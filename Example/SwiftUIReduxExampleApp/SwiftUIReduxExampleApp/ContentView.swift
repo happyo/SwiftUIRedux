@@ -21,41 +21,25 @@ struct ContentView: View {
             .navigationTitle("Redux 示例集")
         }
     }
-        .onAppear {
-
-
-            
-        }
-        .onDisappear {
-        }
-        .onReceive(actionPublisherMiddleware.actionPublisher) { action in
-            switch action {
-            case .decrease:
-                print("decrease")
-            default:
-                break
-            }
-        }
-    }
-    
-    func fetchCount() {
-        // 发送异步 EffectAction
-        let fetchDataAction = ThunkAnimationEffectAction<CountReduxFeature.State, CountReduxFeature.Action> { dispatch, getState in
-            dispatch(.start, nil)  // Dispatch success action
-            let someModel = SomeModel(a: 2)
-//
-//            // 模拟延迟 2 秒
-            Task {
-                try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
-                let data = 4
-                dispatch(.success(data), .easeInOut(duration: 2))  // Dispatch success action
-                dispatch(.passSomeModel(someModel), nil)
-            }
-//
-//            // 模拟获取数据
-            
-        }
-        countStore.send(.effect(fetchDataAction))
-//        countStore.send(.normal(.start))
-    }
+//        
+//    func fetchCount() {
+//        // 发送异步 EffectAction
+//        let fetchDataAction = ThunkAnimationEffectAction<CountReduxFeature.State, CountReduxFeature.Action> { dispatch, getState in
+//            dispatch(.start, nil)  // Dispatch success action
+//            let someModel = SomeModel(a: 2)
+////
+////            // 模拟延迟 2 秒
+//            Task {
+//                try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+//                let data = 4
+//                dispatch(.success(data), .easeInOut(duration: 2))  // Dispatch success action
+//                dispatch(.passSomeModel(someModel), nil)
+//            }
+////
+////            // 模拟获取数据
+//            
+//        }
+//        countStore.send(.effect(fetchDataAction))
+////        countStore.send(.normal(.start))
+//    }
 }

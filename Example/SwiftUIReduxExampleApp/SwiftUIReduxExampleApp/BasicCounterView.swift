@@ -2,10 +2,7 @@ import SwiftUI
 import SwiftUIRedux
 
 struct BasicCounterView: View {
-    @StateObject private var store = StoreFactory.createStore(
-        initialState: BasicCounterFeature.State(),
-        middlewares: [LoggingMiddleware()]
-    )
+    @StateObject private var store: Store<BasicCounterFeature> = StoreFactory.createStore()
     
     var body: some View {
         VStack(spacing: 20) {

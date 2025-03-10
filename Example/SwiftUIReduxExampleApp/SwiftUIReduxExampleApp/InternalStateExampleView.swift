@@ -2,10 +2,7 @@ import SwiftUI
 import SwiftUIRedux
 
 struct InternalStateExampleView: View {
-    @StateObject private var store = StoreFactory.createStore(
-        initialState: MixedStateFeature.State(),
-        middlewares: [LoggingMiddleware()]
-    )
+    @StateObject private var store: Store<MixedStateFeature> = StoreFactory.createStore()
     @State private var localCounter = 0
     
     var body: some View {

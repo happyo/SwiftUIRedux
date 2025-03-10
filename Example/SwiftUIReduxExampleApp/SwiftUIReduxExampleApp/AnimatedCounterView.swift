@@ -2,10 +2,7 @@ import SwiftUI
 import SwiftUIRedux
 
 struct AnimatedCounterView: View {
-    @StateObject private var store = StoreFactory.createStore(
-        initialState: AnimatedCounterFeature.State(),
-        middlewares: [LoggingMiddleware()]
-    )
+    @StateObject private var store: Store<AnimatedCounterFeature> = StoreFactory.createStore()
     
     var body: some View {
         VStack(spacing: 30) {
@@ -71,14 +68,4 @@ struct AnimatedCounterFeature: Feature {
     
     static func initialState() -> State { State() }
     static func createReducer() -> Reducer { Reducer() }
-    
-    struct ScaleResetMiddleware: MiddlewareProtocol {
-        func process(store: StoreProxy<AnimatedCounterFeature>, action: Action) {
-            guard case .adjustScale = action else { return }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                store.dispatch(.adjustScale(1.0))
-            }
-        }
-    }
 }

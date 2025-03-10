@@ -2,10 +2,7 @@ import SwiftUI
 import SwiftUIRedux
 
 struct EffectCounterView: View {
-    @StateObject private var store = StoreFactory.createStore(
-        initialState: EffectCounterFeature.State(),
-        middlewares: [ThunkMiddleware(), LoggingMiddleware()]
-    )
+    @StateObject private var store: Store<EffectCounterFeature> = StoreFactory.createStore()
     
     var body: some View {
         VStack(spacing: 20) {
@@ -61,18 +58,18 @@ struct EffectCounterFeature: Feature {
     static func initialState() -> State { State() }
     static func createReducer() -> Reducer { Reducer() }
     
-    struct ThunkMiddleware: MiddlewareProtocol {
-        func process(store: StoreProxy<EffectCounterFeature>, action: Action) {
-            guard case .fetchRandomNumber = action else { return }
-            
-            store.dispatch(.setLoading(true))
-            
-            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
-                let random = Int.random(in: 1...100)
-                store.dispatch(.setNumber(random))
-            }
-        }
-    }
+//    struct ThunkMiddleware: MiddlewareProtocol {
+//        func process(store: StoreProxy<EffectCounterFeature>, action: Action) {
+//            guard case .fetchRandomNumber = action else { return }
+//            
+//            store.dispatch(.setLoading(true))
+//            
+//            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
+//                let random = Int.random(in: 1...100)
+//                store.dispatch(.setNumber(random))
+//            }
+//        }
+//    }
 }
 
 struct BorderedButtonStyle: ButtonStyle {

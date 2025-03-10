@@ -21,3 +21,9 @@ public extension Feature where InternalState == Void {
         return ()
     }
 }
+
+public extension Feature {
+    static func middlewares() -> [AnyMiddleware<Self>] {
+        return []
+    }
+}
