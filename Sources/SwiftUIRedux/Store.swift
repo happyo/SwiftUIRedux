@@ -54,13 +54,37 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     public func send(_ action: ReduxAction<T.Action>) {
         middlewareChain.process(store: self, action: action)
     }
+    
+    public func send(_ action: T.Action) {
+        middlewareChain.process(store: self, action: .normal(action))
+    }
+    
+    public func send(_ effectAction: EffectAction) {
+        middlewareChain.process(store: self, action: .effect(effectAction))
+    }
 
     public func send(_ action: ReduxAction<T.Action>, animation: Animation?) {
         middlewareChain.process(store: self, action: action, animation: animation)
     }
 
+    public func send(_ action: T.Action, animation: Animation?) {
+        middlewareChain.process(store: self, action: .normal(action), animation: animation)
+    }
+
+    public func send(_ effectAction: EffectAction, animation: Animation?) {
+        middlewareChain.process(store: self, action: .effect(effectAction), animation: animation)
+    }
+
     public func send(_ action: ReduxAction<T.Action>, transaction: Transaction?) {
         middlewareChain.process(store: self, action: action, transaction: transaction)
+    }
+
+    public func send(_ action: T.Action, transaction: Transaction?) {
+        middlewareChain.process(store: self, action: .normal(action), transaction: transaction)
+    }
+
+    public func send(_ effectAction: EffectAction, transaction: Transaction?) {
+        middlewareChain.process(store: self, action: .effect(effectAction), transaction: transaction)
     }
 
     public func addMiddleware(_ middleware: AnyMiddleware<T>) {

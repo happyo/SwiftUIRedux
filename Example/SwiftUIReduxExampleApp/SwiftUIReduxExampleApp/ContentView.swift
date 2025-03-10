@@ -23,12 +23,13 @@ struct ContentView: View {
             print("hook action \(action)")
         }
         self.hookMiddleware = hookMiddleware
-
-        // 在属性声明时使用闭包初始化 @StateObject
-        self._countStore = StateObject(wrappedValue: StoreFactory.createStore(
+        let store = StoreFactory.createStore(
             initialState: CountReduxFeature.State(count: 10),
             otherMiddlewares: [AnyMiddleware(middleware), AnyMiddleware(hookMiddleware)]
-        ))
+        )
+
+        // 在属性声明时使用闭包初始化 @StateObject
+        self._countStore = StateObject(wrappedValue: store)
     }
     var body: some View {
         ZStack {
@@ -43,11 +44,12 @@ struct ContentView: View {
                 Text("Counter: \(countStore.state.count)")
 //                Text("InternalState: \(countStore.internalState?.analyticsData)")
                 Button("increase") {
-                    countStore.send(.normal(.increase), animation: .easeInOut(duration: 1))
+                    countStore.send(.increase, animation: .easeInOut(duration: 1))
                 }
                 Button("decrease") {
-                    countStore.send(.normal(.decrease))
+                    countStore.send(.decrease)
                 }
+                
                 
                 Button("Change internal state") {
 //                    countStore.internalState?.analyticsData = ["hah" : 1]

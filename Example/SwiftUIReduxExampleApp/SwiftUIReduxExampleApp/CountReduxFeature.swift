@@ -6,6 +6,7 @@
 //
 
 import SwiftUIRedux
+import Combine
 
 struct SomeModel {
     var a: Int
@@ -13,14 +14,15 @@ struct SomeModel {
 
 struct MyInternalState {
     var analyticsData: [String: Any] = [:]
+    var cancellables = Set<AnyCancellable>()
 }
 
 struct CountReduxFeature: Feature {
-    //    typealias InternalState = MyInternalState
-    //
-    //    static func createInternalState() -> MyInternalState {
-    //        return MyInternalState()
-    //    }
+    typealias InternalState = MyInternalState
+
+    static func createInternalState() -> MyInternalState {
+        return MyInternalState()
+    }
 
     struct State {
         var count: Int = 0
