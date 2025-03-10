@@ -16,7 +16,6 @@ struct EffectCounterView: View {
             }
 
             Button("Get Random Number") {
-                store.send(.fetchRandomNumber)
             }
             .disabled(store.state.isLoading)
             .buttonStyle(BorderedButtonStyle(tint: .blue))
@@ -24,6 +23,24 @@ struct EffectCounterView: View {
         .animation(.spring(), value: store.state.isLoading)
         .navigationTitle("Async Effect Example")
     }
+
+    // func fetchCount() {
+    //     let fetchDataAction = ThunkAnimationEffectAction<
+    //         CountReduxFeature.State, CountReduxFeature.Action
+    //     > { dispatch, getState in
+    //         dispatch(.start, nil)  // Dispatch success action
+
+    //         Task {
+    //             try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+    //             let data = 4
+    //             dispatch(.success(data), .easeInOut(duration: 2))  // Dispatch success action
+    //             dispatch(.passSomeModel(someModel), nil)
+    //         }
+
+    //     }
+    //     countStore.send(.effect(fetchDataAction))
+    //     countStore.send(.normal(.start))
+    // }
 }
 
 struct EffectCounterFeature: Feature {
@@ -33,7 +50,6 @@ struct EffectCounterFeature: Feature {
     }
 
     enum Action: Equatable {
-        case fetchRandomNumber
         case setLoading(Bool)
         case setNumber(Int)
     }
@@ -47,9 +63,6 @@ struct EffectCounterFeature: Feature {
             case .setNumber(let number):
                 state.randomNumber = number
                 state.isLoading = false
-            case .fetchRandomNumber:
-                // 由中间件处理异步操作
-                break
             }
             return state
         }

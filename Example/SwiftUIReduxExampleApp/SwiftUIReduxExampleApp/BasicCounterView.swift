@@ -37,8 +37,10 @@ struct BasicCounterFeature: Feature {
         func reduce(oldState: State, action: Action) -> State {
             var state = oldState
             switch action {
-            case .increment: state.count += 1
-            case .decrement: state.count -= 1
+            case .increment:
+                state.count += 1
+            case .decrement:
+                state.count -= 1
             }
             return state
         }
