@@ -2,14 +2,33 @@
 
 [English](README.md) | [中文版](README.zh.md)
 
-**SwiftUIRedux** 是一个专为 SwiftUI 应用程序设计的状态管理库，灵感来源于 Redux 和 [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)。它提供了一种简洁而强大的方式来管理和共享应用程序状态，使状态管理更加可预测、可维护和易于理解。
+**SwiftUIRedux** 是一个专为 SwiftUI 应用程序设计的现代化状态管理库，结合了 Redux 的核心思想与 Swift 语言的类型安全特性。灵感来源于 [Redux] 和 [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)。它提供了一种类型安全、可测试的方式来管理应用状态，特别适合中大型复杂应用开发。
 
-## 功能特点
+## 核心特性
 
-- **不可变状态**: 使用不可变数据结构确保状态可预测性，避免不可控的副作用
-- **纯函数Reducer**: 使用纯函数reducer描述状态变化，保持代码可测试性和可维护性
-- **中间件支持**: 通过中间件扩展功能，轻松处理异步操作和其他副作用
-- **无缝SwiftUI集成**: 专为SwiftUI设计，确保与SwiftUI的视图和数据绑定机制完美配合
+- **单向数据流**：严格的 Action -> Reducer -> State 数据流确保状态变更可追溯
+- **类型安全设计**：全面使用 Swift 的强类型系统，从 Action 到 State 都提供编译期检查
+- **组合式架构**：支持功能模块的分解与组合，便于大型应用开发
+- **高效渲染机制**：基于 SwiftUI 的精细状态观察，实现高效视图更新
+- **中间件生态系统**：
+  - `ThunkMiddleware`：处理异步操作和副作用
+  - `LoggingMiddleware`：完整记录状态变更历史
+  - `ActionPublisherMiddleware`：实现跨功能通信
+  - `HookMiddleware`：扩展自定义处理逻辑
+- **时间旅行调试**：配合开发者工具可回溯状态历史
+- **零依赖**：纯 Swift 实现，不依赖任何第三方库
+
+## 目录
+- [快速开始](#快速开始)
+- [核心概念](#核心概念)
+  - [状态（State）](#状态state)
+  - [操作（Action）](#操作action)
+  - [Reducer](#reducer)
+  - [Store](#store)
+  - [中间件（Middleware）](#中间件middleware)
+- [最佳实践](#最佳实践)
+- [示例应用](#示例应用)
+- [贡献指南](#贡献指南)
 
 ## 安装
 

@@ -2,14 +2,33 @@
 
 [中文版](README.zh.md) | [English](README.md)
 
-**SwiftUIRedux** is a state management library designed for SwiftUI applications, inspired by Redux and [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture). It offers a clean and powerful way to manage and share application state, making state management more predictable, maintainable, and understandable.
+**SwiftUIRedux** is a modern state management library for SwiftUI applications that combines Redux principles with Swift's type safety. Inspired by [Redux] and [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture). It provides a type-safe, testable approach to state management, particularly suited for medium to large-scale complex applications.
 
-## Features
+## Core Features
 
-- **Immutable State**: Ensure state predictability with immutable data structures, avoiding uncontrolled side effects.
-- **Pure Function Reducers**: Use pure function reducers to describe state changes, maintaining testability and code maintainability.
-- **Middleware Support**: Extend functionality with middleware, easily handling asynchronous operations and other side effects.
-- **Seamless SwiftUI Integration**: Designed specifically for SwiftUI, ensuring perfect harmony with SwiftUI's view and data binding mechanisms.
+- **Unidirectional Data Flow**: Strict Action -> Reducer -> State flow ensures traceable state changes
+- **Type-Safe Design**: Full utilization of Swift's type system with compile-time checks for all actions and states
+- **Modular Architecture**: Support feature decomposition and composition for large-scale applications
+- **Efficient Rendering**: Fine-grained state observation based on SwiftUI for optimal view updates
+- **Middleware Ecosystem**:
+  - `ThunkMiddleware`: Handle async operations and side effects
+  - `LoggingMiddleware`: Complete state change history tracking
+  - `ActionPublisherMiddleware`: Cross-feature communication
+  - `HookMiddleware`: Custom logic extension
+- **Time Travel Debugging**: State history回溯 with developer tools
+- **Zero Dependencies**: Pure Swift implementation with no third-party dependencies
+
+## Table of Contents
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+  - [State](#state)
+  - [Action](#action)
+  - [Reducer](#reducer)
+  - [Store](#store)
+  - [Middleware](#middleware)
+- [Best Practices](#best-practices)
+- [Example App](#example-app)
+- [Contributing](#contributing)
 
 ## Installation
 
