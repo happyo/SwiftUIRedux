@@ -3,21 +3,23 @@ import SwiftUIRedux
 
 struct BasicCounterView: View {
     @StateObject private var store: Store<BasicCounterFeature> = StoreFactory.createStore()
-    
+
     var body: some View {
-        VStack(spacing: 20) {
-            Text("当前计数: \(store.state.count)")
-                .font(.largeTitle)
-            
-            HStack(spacing: 20) {
-                Button("−") { store.send(.decrement) }
-                    .buttonStyle(CircleButtonStyle(color: .red))
-                
-                Button("+") { store.send(.increment) }
-                    .buttonStyle(CircleButtonStyle(color: .green))
+        var body: some View {
+            VStack(spacing: 20) {
+                Text("Current Count: \(store.state.count)")
+                    .font(.largeTitle)
+
+                HStack(spacing: 20) {
+                    Button("−") { store.send(.decrement) }
+                        .buttonStyle(CircleButtonStyle(color: .red))
+
+                    Button("+") { store.send(.increment) }
+                        .buttonStyle(CircleButtonStyle(color: .green))
+                }
             }
+            .navigationTitle("Basic Counter")
         }
-        .navigationTitle("基础计数器")
     }
 }
 
@@ -25,12 +27,12 @@ struct BasicCounterFeature: Feature {
     struct State: Equatable {
         var count = 0
     }
-    
+
     enum Action: Equatable {
         case increment
         case decrement
     }
-    
+
     struct Reducer: ReducerProtocol {
         func reduce(oldState: State, action: Action) -> State {
             var state = oldState
@@ -41,7 +43,7 @@ struct BasicCounterFeature: Feature {
             return state
         }
     }
-    
+
     static func initialState() -> State { State() }
     static func createReducer() -> Reducer { Reducer() }
 }

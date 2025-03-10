@@ -3,26 +3,26 @@ import SwiftUIRedux
 
 struct EffectCounterView: View {
     @StateObject private var store: Store<EffectCounterFeature> = StoreFactory.createStore()
-    
+
     var body: some View {
         VStack(spacing: 20) {
             if store.state.isLoading {
                 ProgressView()
                     .scaleEffect(2.0)
             } else {
-                Text("随机数: \(store.state.randomNumber)")
+                Text("Random Number: \(store.state.randomNumber)")
                     .font(.largeTitle)
                     .transition(.scale.combined(with: .opacity))
             }
-            
-            Button("获取随机数") {
+
+            Button("Get Random Number") {
                 store.send(.fetchRandomNumber)
             }
             .disabled(store.state.isLoading)
             .buttonStyle(BorderedButtonStyle(tint: .blue))
         }
         .animation(.spring(), value: store.state.isLoading)
-        .navigationTitle("异步效果示例")
+        .navigationTitle("Async Effect Example")
     }
 }
 
@@ -31,13 +31,13 @@ struct EffectCounterFeature: Feature {
         var randomNumber = 0
         var isLoading = false
     }
-    
+
     enum Action: Equatable {
         case fetchRandomNumber
         case setLoading(Bool)
         case setNumber(Int)
     }
-    
+
     struct Reducer: ReducerProtocol {
         func reduce(oldState: State, action: Action) -> State {
             var state = oldState
@@ -54,22 +54,22 @@ struct EffectCounterFeature: Feature {
             return state
         }
     }
-    
+
     static func initialState() -> State { State() }
     static func createReducer() -> Reducer { Reducer() }
-    
-//    struct ThunkMiddleware: MiddlewareProtocol {
-//        func process(store: StoreProxy<EffectCounterFeature>, action: Action) {
-//            guard case .fetchRandomNumber = action else { return }
-//            
-//            store.dispatch(.setLoading(true))
-//            
-//            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
-//                let random = Int.random(in: 1...100)
-//                store.dispatch(.setNumber(random))
-//            }
-//        }
-//    }
+
+    //    struct ThunkMiddleware: MiddlewareProtocol {
+    //        func process(store: StoreProxy<EffectCounterFeature>, action: Action) {
+    //            guard case .fetchRandomNumber = action else { return }
+    //
+    //            store.dispatch(.setLoading(true))
+    //
+    //            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
+    //                let random = Int.random(in: 1...100)
+    //                store.dispatch(.setNumber(random))
+    //            }
+    //        }
+    //    }
 }
 
 struct BorderedButtonStyle: ButtonStyle {
