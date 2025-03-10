@@ -16,7 +16,7 @@
 ### Swift Package Manager
 
 1. 在 Xcode 中选择 File > Add Packages...
-2. 输入仓库URL: `https://github.com/yourusername/SwiftUIRedux.git`
+2. 输入仓库URL: `https://github.com/happyo/SwiftUIRedux.git`
 3. 选择版本规则
 4. 点击 Add Package
 
