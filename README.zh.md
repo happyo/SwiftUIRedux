@@ -1,8 +1,12 @@
 # SwiftUIRedux 状态管理库
 
-[English](README.md) | [中文版](README.zh.md)
+[![Swift 5.9](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/happyo/SwiftUIRedux/ci.yml?branch=main)](https://github.com/happyo/SwiftUIRedux/actions)
 
-**SwiftUIRedux** 是一个专为 SwiftUI 应用程序设计的现代化状态管理库，结合 Redux 核心思想与 Swift 语言的类型安全特性。灵感来源于 [Redux] 和 [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)。提供比同类框架更轻量的实现，同时覆盖 90% 的常见状态管理场景。
+[English](README.md) | 中文版
+
+**SwiftUIRedux** 是专为 SwiftUI 设计的现代化状态管理库，完美结合 Redux 核心模式与 Swift 的类型安全特性。灵感来源于 [Redux] 和 [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)，提供比同类框架更轻量高效的解决方案，覆盖 90% 的 SwiftUI 状态管理场景。
 
 ## 🌟 核心特性
 
@@ -347,8 +351,17 @@ struct MiddlewareFeature: Feature {
 }
 ```
 
+## 🏗 架构最佳实践
+
 ### 状态设计原则
-1. **最小化状态**：只存储必要数据
-2. **不可变性**：始终通过 reducer 返回新状态
-3. **本地优先**：组件私有状态使用 @State
-4. **组合式设计**：复杂状态分解为子状态
+1. **单一数据源** - 整个应用状态集中存储
+2. **不可变状态** - 始终通过 reducer 返回新状态
+3. **最小化状态** - 只存储必要数据
+4. **本地优先** - 组件私有状态保持使用 `@State`
+5. **组合式开发** - 复杂功能拆分为子模块
+
+### 状态类型指南
+| 状态类型         | 使用场景                          | 更新机制         |
+|------------------|---------------------------------|------------------|
+| Published State  | 需要驱动视图更新的数据            | 通过 Action 修改 |
+| Internal State   | 临时存储/中间计算状态             | 直接修改         |

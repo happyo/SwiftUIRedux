@@ -138,9 +138,18 @@ struct MiddlewareFeature: Feature {
 }
 ```
 
-## 🧠 State Design Principles
-1. **Minimal State**: Store only essential data
-2. **Immutability**: Always return new state instances in reducers
-3. **Local First**: Use `@State` for component-private state
-4. **Composition**: Break complex states into sub-features
+## 🏗 Architecture Best Practices
+
+### State Design Principles
+1. **Single Source of Truth** - Centralized application state
+2. **Immutable States** - Always return new state instances
+3. **Minimal State** - Store only essential data
+4. **Local First** - Keep component-private state with `@State`
+5. **Composition** - Break complex features into sub-modules
+
+### State Type Guide
+| State Type        | Usage Scenario                 | Update Mechanism     |
+|-------------------|--------------------------------|----------------------|
+| Published State   | Data requiring view updates    | Modified via Actions |
+| Internal State    | Temporary storage/calculation  | Direct modification  |
 
