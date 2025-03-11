@@ -1,157 +1,143 @@
-# SwiftUIRedux
+# SwiftUIRedux State Management Library
 
-[中文版](README.zh.md) | [English](README.md)
+[English](README.md) | [中文版](README.zh.md)
 
-**SwiftUIRedux** is a modern state management library for SwiftUI applications that combines Redux principles with Swift's type safety. Inspired by [Redux] and [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture). It provides a type-safe, testable approach to state management, particularly suited for medium to large-scale complex applications.
+**SwiftUIRedux** is a modern state management library designed for SwiftUI applications, combining Redux core concepts with Swift's type safety. Inspired by [Redux] and [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture). Offers a lighter-weight implementation than similar frameworks while covering 90% of common state management scenarios.
 
-## Core Features
+## 🌟 Core Features
 
-- **Unidirectional Data Flow**: Strict Action -> Reducer -> State flow ensures traceable state changes
-- **Type-Safe Design**: Full utilization of Swift's type system with compile-time checks for all actions and states
-- **Modular Architecture**: Support feature decomposition and composition for large-scale applications
-- **Efficient Rendering**: Fine-grained state observation based on SwiftUI for optimal view updates
-- **Middleware Ecosystem**:
-  - `ThunkMiddleware`: Handle async operations and side effects
-  - `LoggingMiddleware`: Complete state change history tracking
-  - `ActionPublisherMiddleware`: Cross-feature communication
-  - `HookMiddleware`: Custom logic extension
-- **Time Travel Debugging**: State history回溯 with developer tools
-- **Zero Dependencies**: Pure Swift implementation with no third-party dependencies
+### Foundation
+• **Strict Unidirectional Flow**: Action → Reducer → State closed-loop management
+• **Type-Safe Architecture**: Full type inference from Action to State
+• **Efficient View Rendering**: Precise state subscription mechanism based on SwiftUI
 
-## Table of Contents
-- [Quick Start](#quick-start)
-- [Core Concepts](#core-concepts)
-  - [State](#state)
-  - [Action](#action)
-  - [Reducer](#reducer)
-  - [Store](#store)
-  - [Middleware](#middleware)
-- [Best Practices](#best-practices)
-- [Example App](#example-app)
-- [Contributing](#contributing)
+### Advanced Capabilities
+• **Two-Way Binding Support**: Native SwiftUI binding via `store.property`
+• **Hybrid State Management**:
+  • `Published State`: Observable state triggered by Actions
+  • `Not Published State`: Non-rendering state storage (e.g., scrollView real-time offset tracking)
+• **Middleware Ecosystem**:
+  • `ThunkMiddleware`: Async operation handling
+  • `ActionPublisherMiddleware`: Global Action monitoring for side effects
 
-## Installation
+## 🚀 Quick Start
 
-### Swift Package Manager
-
-1. In Xcode, select File > Add Packages...
-2. Enter repository URL: `https://github.com/happyo/SwiftUIRedux.git`
-3. Choose version rules
-4. Click Add Package
-
-## Example: Counter Feature
-
-### Feature Definition
-
+### Installation
 ```swift
-struct CountReduxFeature: Feature {
-    struct State: Equatable {
-        var count: Int = 0
-        var isLoading: Bool = false
-    }
-    
-    enum Action: Equatable {
-        case increase
-        case decrease
-        case start
-        case success(Int)
-        case error(String)
-        
-        func isStartAction() -> Bool {
-            return self == .start
+// Package.swift
+dependencies: [
+    .package(url: "https://github.com/happyo/SwiftUIRedux.git", from: "1.0.7")
+]
+```
+
+### 5-Minute Tutorial
+```swift
+import SwiftUI
+import SwiftUIRedux
+
+struct BasicCounterView: View {
+    @StateObject private var store: Store<BasicCounterFeature> = StoreFactory.createStore()
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Current Count: \(store.state.count)")
+                .font(.largeTitle)
+            
+            TextField("Input", text: store.inputString)
+                .padding()
+            
+            ControlButtons(store: store)
         }
+        .navigationTitle("Basic Counter")
     }
-    
+}
+
+struct BasicCounterFeature: Feature {
+    struct State: Equatable {
+        var count = 0
+        var inputString = ""
+    }
+
+    enum Action: Equatable {
+        case increment
+        case decrement
+    }
+
     struct Reducer: ReducerProtocol {
         func reduce(oldState: State, action: Action) -> State {
-            var newState = oldState
+            var state = oldState
             switch action {
-            case .increase:
-                newState.count += 1
-            case .decrease:
-                newState.count -= 1
-            case .start:
-                newState.isLoading = true
-            case .success(let count):
-                newState.isLoading = false
-                newState.count = count
-            case .error(_):
-                newState.isLoading = false
+            case .increment: state.count += 1
+            case .decrement: state.count -= 1
             }
-            return newState
+            return state
         }
     }
+
+    static func initialState() -> State { State() }
+    static func createReducer() -> Reducer { Reducer() }
+}
+```
+
+## 🔥 Core Features Deep Dive
+
+### State Binding (Enhanced)
+```swift
+// Native SwiftUI binding integration
+TextField("Input", text: store.inputString)
+
+// Reducer handling
+Reducer { oldState, action in
+    guard case .updateInput(let text) = action else { return oldState }
+    var state = oldState
+    state.inputString = text
+    return state
+}
+```
+
+### Async Handling (Optimized)
+```swift
+struct EffectCounterFeature: Feature {
+    // State and Action declarations
     
-    static func initialState() -> State {
-        return State()
-    }
-    
-    static func createReducer() -> Reducer {
-        return Reducer()
+    static func createFetchAsyncAction() -> ThunkEffectAction<State, Action> {
+        ThunkEffectAction { dispatch, getState in
+            dispatch(.startLoading)
+            
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            let number = Int.random(in: 1...100)
+            dispatch(.setNumber(number))
+            
+            dispatch(.endLoading)
+        }
     }
     
     static func middlewares() -> [AnyMiddleware<Self>] {
-        let thunkMiddleware = ThunkMiddleware<CountReduxFeature>()
-        return [AnyMiddleware(thunkMiddleware)]
+        [AnyMiddleware(ThunkMiddleware())]
     }
 }
 ```
 
-### View Implementation
-
+### Middleware System (Configuration Example)
 ```swift
-import SwiftUI
+struct MiddlewareFeature: Feature {
+    static func middlewares() -> [AnyMiddleware<Self>] {
+        let logger = LoggingMiddleware<MiddlewareFeature>()
+        let actionPublisher = ActionPublisherMiddleware<MiddlewareFeature>()
+        
+        return [AnyMiddleware(logger), AnyMiddleware(actionPublisher)]
+    }
+}
 
-struct ContentView: View {
-    @ObservedObject var countStore: Store<CountReduxFeature> = StoreFactory.createStore()
-    
-    var body: some View {
-        ZStack {
-            Color.white.ignoresSafeArea(.all)
-            
-            VStack {
-                if countStore.state.isLoading {
-                    ProgressView()
-                        .frame(width: 100, height: 100)
-                }
-                
-                Text("Counter: \(countStore.state.count)")
-                Button("Increase") {
-                    countStore.send(.normal(.increase))
-                }
-                Button("Decrease") {
-                    countStore.send(.normal(.decrease))
-                }
-                
-                Button("Change") {
-                    fetchCount()
-                }
-            }
-        }
-    }
-    
-    func fetchCount() {
-        let fetchDataAction = ThunkEffectAction<CountReduxFeature.State, CountReduxFeature.Action> { dispatch, getState in
-            DispatchQueue.main.async {
-                dispatch(.start)
-            }
-            
-            DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
-                let data = 4
-                DispatchQueue.main.async {
-                    dispatch(.success(data))
-                }
-            }
-        }
-        countStore.send(.effect(fetchDataAction))
-    }
+// Usage in View
+.onReceive(middleware.actionPublisher) { action in
+    analytics.track(action)
 }
 ```
 
-## Contributing
+## 🧠 State Design Principles
+1. **Minimal State**: Store only essential data
+2. **Immutability**: Always return new state instances in reducers
+3. **Local First**: Use `@State` for component-private state
+4. **Composition**: Break complex states into sub-features
 
-We welcome issues and pull requests! Please make sure to follow our contributing guidelines.
-
-## License
-
-SwiftUIRedux is released under the MIT license. See LICENSE for details.

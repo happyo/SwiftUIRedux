@@ -8,6 +8,8 @@ struct BasicCounterView: View {
         VStack(spacing: 20) {
             Text("Current Count: \(store.state.count)")
                 .font(.largeTitle)
+            
+            Text("Input string: \(store.state.inputString)")
 
             HStack(spacing: 20) {
                 Button("−") { store.send(.decrement) }
@@ -16,6 +18,9 @@ struct BasicCounterView: View {
                 Button("+") { store.send(.increment) }
                     .buttonStyle(CircleButtonStyle(color: .green))
             }
+            
+            TextField("Please input something", text: store.inputString)
+                .padding()
         }
         .navigationTitle("Basic Counter")
     }
@@ -24,6 +29,7 @@ struct BasicCounterView: View {
 struct BasicCounterFeature: Feature {
     struct State: Equatable {
         var count = 0
+        var inputString: String = ""
     }
 
     enum Action: Equatable {
