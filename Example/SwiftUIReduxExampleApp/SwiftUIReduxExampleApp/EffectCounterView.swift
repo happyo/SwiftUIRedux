@@ -16,6 +16,7 @@ struct EffectCounterView: View {
             }
 
             Button("Get Random Number") {
+                store.send(EffectCounterFeature.createFetchAsyncRandomNumberAction())
             }
             .disabled(store.state.isLoading)
             .buttonStyle(BorderedButtonStyle(tint: .blue))
@@ -23,34 +24,17 @@ struct EffectCounterView: View {
         .animation(.spring(), value: store.state.isLoading)
         .navigationTitle("Async Effect Example")
     }
-
-    // func fetchCount() {
-    //     let fetchDataAction = ThunkAnimationEffectAction<
-    //         CountReduxFeature.State, CountReduxFeature.Action
-    //     > { dispatch, getState in
-    //         dispatch(.start, nil)  // Dispatch success action
-
-    //         Task {
-    //             try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
-    //             let data = 4
-    //             dispatch(.success(data), .easeInOut(duration: 2))  // Dispatch success action
-    //             dispatch(.passSomeModel(someModel), nil)
-    //         }
-
-    //     }
-    //     countStore.send(.effect(fetchDataAction))
-    //     countStore.send(.normal(.start))
-    // }
 }
 
 struct EffectCounterFeature: Feature {
-    struct State: Equatable {
+    struct State {
         var randomNumber = 0
         var isLoading = false
     }
 
-    enum Action: Equatable {
-        case setLoading(Bool)
+    enum Action {
+        case startLoading
+        case endLoading
         case setNumber(Int)
     }
 
@@ -58,11 +42,12 @@ struct EffectCounterFeature: Feature {
         func reduce(oldState: State, action: Action) -> State {
             var state = oldState
             switch action {
-            case .setLoading(let loading):
-                state.isLoading = loading
+            case .startLoading:
+                state.isLoading = true
+            case .endLoading:
+                state.isLoading = false
             case .setNumber(let number):
                 state.randomNumber = number
-                state.isLoading = false
             }
             return state
         }
@@ -70,19 +55,31 @@ struct EffectCounterFeature: Feature {
 
     static func initialState() -> State { State() }
     static func createReducer() -> Reducer { Reducer() }
+    
+    // Important, using async must add ThunkMiddleware
+    static func middlewares() -> [AnyMiddleware<EffectCounterFeature>] {
+        let thunkMiddleware = ThunkMiddleware<EffectCounterFeature>()
+        
+        return [AnyMiddleware(thunkMiddleware)]
+    }
 
-    //    struct ThunkMiddleware: MiddlewareProtocol {
-    //        func process(store: StoreProxy<EffectCounterFeature>, action: Action) {
-    //            guard case .fetchRandomNumber = action else { return }
-    //
-    //            store.dispatch(.setLoading(true))
-    //
-    //            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
-    //                let random = Int.random(in: 1...100)
-    //                store.dispatch(.setNumber(random))
-    //            }
-    //        }
-    //    }
+    static func createFetchAsyncRandomNumberAction() -> ThunkEffectAction<State, Action> {
+        ThunkEffectAction<State, Action> { dispatch, getState in
+            let state = getState()
+            
+            print("Current random number: \(state.randomNumber)")
+            
+            Task {
+                dispatch(.startLoading)
+                
+                try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+                let randomNumber = Int.random(in: 1...100)
+                dispatch(.setNumber(randomNumber))
+                
+                dispatch(.endLoading)
+            }
+        }
+    }
 }
 
 struct BorderedButtonStyle: ButtonStyle {

@@ -5,21 +5,19 @@ struct BasicCounterView: View {
     @StateObject private var store: Store<BasicCounterFeature> = StoreFactory.createStore()
 
     var body: some View {
-        var body: some View {
-            VStack(spacing: 20) {
-                Text("Current Count: \(store.state.count)")
-                    .font(.largeTitle)
+        VStack(spacing: 20) {
+            Text("Current Count: \(store.state.count)")
+                .font(.largeTitle)
 
-                HStack(spacing: 20) {
-                    Button("−") { store.send(.decrement) }
-                        .buttonStyle(CircleButtonStyle(color: .red))
+            HStack(spacing: 20) {
+                Button("−") { store.send(.decrement) }
+                    .buttonStyle(CircleButtonStyle(color: .red))
 
-                    Button("+") { store.send(.increment) }
-                        .buttonStyle(CircleButtonStyle(color: .green))
-                }
+                Button("+") { store.send(.increment) }
+                    .buttonStyle(CircleButtonStyle(color: .green))
             }
-            .navigationTitle("Basic Counter")
         }
+        .navigationTitle("Basic Counter")
     }
 }
 
