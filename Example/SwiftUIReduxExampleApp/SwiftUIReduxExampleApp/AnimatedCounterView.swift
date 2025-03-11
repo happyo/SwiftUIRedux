@@ -8,15 +8,14 @@ struct AnimatedCounterView: View {
             Text("\(store.state.count)")
                 .font(.system(size: 60, weight: .bold))
                 .scaleEffect(store.state.scale)
-                .animation(.spring(response: 0.3, dampingFraction: 0.2), value: store.state.scale)
 
             HStack(spacing: 20) {
-                Button(action: { store.send(.decrement) }) {
+                Button(action: { store.send(.decrement, animation: .default) }) {
                     Image(systemName: "minus.circle.fill")
                         .font(.system(size: 40))
                 }
 
-                Button(action: { store.send(.increment) }) {
+                Button(action: { store.send(.increment, animation: .default) }) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 40))
                 }
@@ -24,7 +23,7 @@ struct AnimatedCounterView: View {
             .foregroundColor(.blue)
 
             Button("Random Number") {
-                store.send(.random)
+                store.send(.random, animation: .default)
             }
             .buttonStyle(BorderedButtonStyle(tint: .green))
         }

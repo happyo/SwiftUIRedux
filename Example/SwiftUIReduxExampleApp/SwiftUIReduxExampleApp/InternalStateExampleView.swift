@@ -2,35 +2,33 @@ import SwiftUI
 import SwiftUIRedux
 
 struct InternalStateExampleView: View {
-    @StateObject private var store: Store<MixedStateFeature> = StoreFactory.createStore()
-    @State private var localCounter = 0
+    @StateObject private var store: Store<MixedStateFeature> = StoreFactory.createStore(internalState: MixedStateFeature.InternalState())
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Global State: \(store.state.globalCount)")
+            Text("Published State: \(store.state.publishedCount)")
                 .font(.title)
 
-            Text("Local State: \(localCounter)")
+            Text("Not published State: \(store.internalState?.notPublishedCount ?? 0)")
                 .font(.title)
                 .foregroundColor(.secondary)
 
             HStack(spacing: 20) {
-                Button("Global +1") { store.send(.incrementGlobal) }
-                Button("Global -1") { store.send(.decrementGlobal) }
+                Button("Published +1") { store.send(.incrementPublished) }
+
+                Button("Published -1") { store.send(.decrementPublished) }
             }
-            .buttonStyle(CircleButtonStyle(color: .purple))
 
             Divider().padding()
 
             HStack(spacing: 20) {
-                Button("Local +1") { localCounter += 1 }
-                Button("Local -1") { localCounter -= 1 }
+                Button("Not published +1") { store.internalState?.notPublishedCount += 1 }
+                Button("Not published -1") { store.internalState?.notPublishedCount -= 1 }
             }
-            .buttonStyle(CircleButtonStyle(color: .orange))
 
             Button("Reset All") {
                 store.send(.reset)
-                localCounter = 0
+                store.internalState?.notPublishedCount = 0
             }
             .buttonStyle(BorderedButtonStyle(tint: .red))
         }
@@ -39,13 +37,17 @@ struct InternalStateExampleView: View {
 }
 
 struct MixedStateFeature: Feature {
-    struct State: Equatable {
-        var globalCount = 0
+    struct State {
+        var publishedCount = 0
+    }
+    
+    struct InternalState {
+        var notPublishedCount = 0
     }
 
-    enum Action: Equatable {
-        case incrementGlobal
-        case decrementGlobal
+    enum Action {
+        case incrementPublished
+        case decrementPublished
         case reset
     }
 
@@ -53,9 +55,12 @@ struct MixedStateFeature: Feature {
         func reduce(oldState: State, action: Action) -> State {
             var state = oldState
             switch action {
-            case .incrementGlobal: state.globalCount += 1
-            case .decrementGlobal: state.globalCount -= 1
-            case .reset: state.globalCount = 0
+            case .incrementPublished:
+                state.publishedCount += 1
+            case .decrementPublished:
+                state.publishedCount -= 1
+            case .reset:
+                state.publishedCount = 0
             }
             return state
         }
