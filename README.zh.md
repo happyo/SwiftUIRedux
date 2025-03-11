@@ -2,19 +2,19 @@
 
 [English](README.md) | [中文版](README.zh.md)
 
-**SwiftUIRedux** 是一个专为 SwiftUI 应用程序设计的现代化状态管理库，结合了 Redux 的核心思想与 Swift 语言的类型安全特性。灵感来源于 [Redux] 和 [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)。它提供了一种类型安全、可测试的方式来管理应用状态，特别适合中大型复杂应用开发。
+**SwiftUIRedux** 是一个专为 SwiftUI 应用程序设计的现代化状态管理库，结合了 Redux 的核心思想与 Swift 语言的类型安全特性。灵感来源于 [Redux] 和 [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)。它提供了一种类型安全、可测试的方式来管理应用状态，特别适合中大型复杂应用开发。相对于swift-composable-architecture，这个更轻量，代码更少，但是能覆盖绝大部分的需求。
 
 ## 核心特性
 
 - **单向数据流**：严格的 Action -> Reducer -> State 数据流确保状态变更可追溯
+- **支持一些Binding需求**：因为有些控件需要提供Binging属性，所以这个时候用Action来触发就比较麻烦，所以就在store层支持了Binding。例如store的state有一个inputString属性，获取这个值就调用store.state.inputString，想要使用Binding的时候就直接store.inputstring。
 - **类型安全设计**：全面使用 Swift 的强类型系统，从 Action 到 State 都提供编译期检查
 - **组合式架构**：支持功能模块的分解与组合，便于大型应用开发
 - **高效渲染机制**：基于 SwiftUI 的精细状态观察，实现高效视图更新
 - **中间件生态系统**：
   - `ThunkMiddleware`：处理异步操作和副作用
   - `LoggingMiddleware`：完整记录状态变更历史
-  - `ActionPublisherMiddleware`：实现跨功能通信
-  - `HookMiddleware`：扩展自定义处理逻辑
+  - `ActionPublisherMiddleware`：实现Action监听，方便在某个Action后进行其他操作。
 - **时间旅行调试**：配合开发者工具可回溯状态历史
 - **零依赖**：纯 Swift 实现，不依赖任何第三方库
 
