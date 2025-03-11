@@ -17,6 +17,7 @@ struct ContentView: View {
                 NavigationLink("Async Effect Example", destination: EffectCounterView())
                 NavigationLink("Combined State Example", destination: InternalStateExampleView())
                 NavigationLink("Animated Counter Example", destination: AnimatedCounterView())
+                NavigationLink("Middleware Example", destination: MiddlewareView())
             }
             .navigationTitle("Redux Examples")
         }
