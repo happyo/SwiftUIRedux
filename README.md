@@ -7,15 +7,20 @@
 ## 🌟 Core Features
 
 ### Foundation
+
 • **Strict Unidirectional Flow**: Action → Reducer → State closed-loop management
+
 • **Type-Safe Architecture**: Full type inference from Action to State
+
 • **Efficient View Rendering**: Precise state subscription mechanism based on SwiftUI
 
 ### Advanced Capabilities
 • **Two-Way Binding Support**: Native SwiftUI binding via `store.property`
+
 • **Hybrid State Management**:
   • `Published State`: Observable state triggered by Actions
   • `Not Published State`: Non-rendering state storage (e.g., scrollView real-time offset tracking)
+  
 • **Middleware Ecosystem**:
   • `ThunkMiddleware`: Async operation handling
   • `ActionPublisherMiddleware`: Global Action monitoring for side effects
