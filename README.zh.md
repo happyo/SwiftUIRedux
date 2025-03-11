@@ -6,19 +6,22 @@
 
 ## 🌟 核心特性
 
-### 基础能力
-- **严格单向数据流**：Action → Reducer → State 的闭环管理
-- **类型安全架构**：从 Action 到 State 的完整类型推导
-- **高效视图渲染**：基于 SwiftUI 的精准状态订阅机制
+### 基础架构
+- 🚀 **严格单向数据流**：强制遵循 Action → Reducer → State 的闭环管理
+- 🛡️ **类型安全**：从 Action 定义到 State 变更的完整类型推导
+- ⚡️ **高效渲染**：基于 SwiftUI 的精准差分更新机制
 
-### 进阶能力
-- **双向绑定支持**：`store.property` 原生支持 SwiftUI 双向绑定
-- **混合状态管理**：
-  - `Published State`：通过 Action 触发的可观察状态
-  - `Not Published State`：不触发页面渲染的状态，但是需要存储下来用于某些时候进行判断，例如存储scrollView的实时offset。
-- **中间件生态**：
-  - `ThunkMiddleware`：异步操作处理
-  - `ActionPublisherMiddleware`：实现 Action 监听，便于某个Action进行其他操作。
+### 状态管理
+- 🔄 **双向绑定**：原生支持 `store.binding(for:)` 的 SwiftUI 双向绑定
+- 🎭 **混合状态**：
+  - **Published State** - 驱动视图更新的核心状态
+  - **Internal State** - 用于临时存储的非响应式状态（如滚动偏移量）
+  
+### 中间件生态
+- ⏳ **ThunkMiddleware**：处理异步任务和副作用
+- 📡 **ActionPublisherMiddleware**：全局 Action 监听管道
+- 🔍 **LoggingMiddleware**：开发调试日志追踪
+- 🪝 **HookMiddleware**：自定义生命周期钩子
 
 ## 🚀 快速入门
 
@@ -30,33 +33,58 @@ dependencies: [
 ]
 ```
 
-### 五分钟上手
+### 基础示例（5分钟上手）
 ```swift
 import SwiftUI
 import SwiftUIRedux
 
 struct BasicCounterView: View {
-    @StateObject private var store: Store<BasicCounterFeature> = StoreFactory.createStore()
-
+    @StateObject private var store = StoreFactory.createStore(feature: BasicCounterFeature.self)
+    
     var body: some View {
         VStack(spacing: 20) {
-            Text("Current Count: \(store.state.count)")
-                .font(.largeTitle)
-            
-            Text("Input string: \(store.state.inputString)")
-
-            HStack(spacing: 20) {
-                Button("−") { store.send(.decrement) }
-                    .buttonStyle(CircleButtonStyle(color: .red))
-
-                Button("+") { store.send(.increment) }
-                    .buttonStyle(CircleButtonStyle(color: .green))
-            }
-            
-            TextField("Please input something", text: store.inputString)
-                .padding()
+            CounterDisplay(store: store)
+            CounterButtons(store: store)
+            InputField(store: store)
         }
-        .navigationTitle("Basic Counter")
+        .navigationTitle("基础计数器")
+    }
+}
+
+private struct CounterDisplay: View {
+    let store: Store<BasicCounterFeature>
+    
+    var body: some View {
+        VStack {
+            Text("当前计数: \(store.state.count)")
+                .font(.largeTitle)
+            Text("输入内容: \(store.state.inputString)")
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct CounterButtons: View {
+    let store: Store<BasicCounterFeature>
+    
+    var body: some View {
+        HStack(spacing: 20) {
+            Button("−") { store.send(.decrement) }
+                .buttonStyle(CircleButtonStyle(color: .red))
+            
+            Button("+") { store.send(.increment) }
+                .buttonStyle(CircleButtonStyle(color: .green))
+        }
+    }
+}
+
+private struct InputField: View {
+    let store: Store<BasicCounterFeature>
+    
+    var body: some View {
+        TextField("请输入内容", text: store.binding(for: \.inputString, action: .updateInput))
+            .textFieldStyle(.roundedBorder)
+            .padding(.horizontal)
     }
 }
 
@@ -91,7 +119,7 @@ struct BasicCounterFeature: Feature {
 
 ## 🔥 核心功能详解
 
-### 状态绑定（新增强势）
+### 状态绑定
 ```swift
 import SwiftUI
 import SwiftUIRedux
@@ -180,9 +208,10 @@ struct EffectCounterView: View {
 }
 
 struct EffectCounterFeature: Feature {
-    struct State {
+    struct State: Equatable {
         var randomNumber = 0
         var isLoading = false
+        var lastUpdated = Date()
     }
 
     enum Action {
@@ -199,8 +228,11 @@ struct EffectCounterFeature: Feature {
                 state.isLoading = true
             case .endLoading:
                 state.isLoading = false
+                state.lastUpdated = Date()
             case .setNumber(let number):
                 state.randomNumber = number
+            case .reset:
+                state = Self.initialState()
             }
             return state
         }

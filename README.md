@@ -7,23 +7,21 @@
 ## 🌟 Core Features
 
 ### Foundation
+- 🚀 **Strict Unidirectional Flow**: Enforces Action → Reducer → State lifecycle
+- 🛡️ **Type Safety**: Full type inference from Action to State changes
+- ⚡️ **Efficient Rendering**: Smart diffing update mechanism with SwiftUI
 
-• **Strict Unidirectional Flow**: Action → Reducer → State closed-loop management
+### State Management
+- 🔄 **Two-Way Binding**: Native `store.binding(for:)` support
+- 🎭 **Hybrid State**:
+  - **Published State** - Core state that drives view updates
+  - **Internal State** - Non-reactive temporary storage (e.g. scroll offsets)
 
-• **Type-Safe Architecture**: Full type inference from Action to State
-
-• **Efficient View Rendering**: Precise state subscription mechanism based on SwiftUI
-
-### Advanced Capabilities
-• **Two-Way Binding Support**: Native SwiftUI binding via `store.property`
-
-• **Hybrid State Management**:
-  • `Published State`: Observable state triggered by Actions
-  • `Not Published State`: Non-rendering state storage (e.g., scrollView real-time offset tracking)
-  
-• **Middleware Ecosystem**:
-  • `ThunkMiddleware`: Async operation handling
-  • `ActionPublisherMiddleware`: Global Action monitoring for side effects
+### Middleware Ecosystem
+- ⏳ **ThunkMiddleware**: Handle async operations and side effects
+- 📡 **ActionPublisherMiddleware**: Global Action monitoring pipeline
+- 🔍 **LoggingMiddleware**: Development debug logging
+- 🪝 **HookMiddleware**: Custom lifecycle hooks
 
 ## 🚀 Quick Start
 
