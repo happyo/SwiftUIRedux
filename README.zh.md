@@ -1,6 +1,6 @@
 # SwiftUIRedux 状态管理库
 
-[![Swift 5.9](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+[![Swift 6.0](https://img.shields.io/badge/Swift-6.0+-orange.svg)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/happyo/SwiftUIRedux/ci.yml?branch=main)](https://github.com/happyo/SwiftUIRedux/actions)
 
@@ -13,13 +13,12 @@
 ### 基础架构
 - 🚀 **严格单向数据流**：强制遵循 Action → Reducer → State 的闭环管理
 - 🛡️ **类型安全**：从 Action 定义到 State 变更的完整类型推导
-- ⚡️ **高效渲染**：基于 SwiftUI 的精准差分更新机制
 
 ### 状态管理
-- 🔄 **双向绑定**：原生支持 `store.binding(for:)` 的 SwiftUI 双向绑定
+- 🔄 **双向绑定**：原生支持 `store.property` 的 SwiftUI 双向绑定
 - 🎭 **混合状态**：
-  - **Published State** - 驱动视图更新的核心状态
-  - **Internal State** - 用于临时存储的非响应式状态（如滚动偏移量）
+  1. **Published State** - 驱动视图更新的核心状态
+  2. **Internal State** - 用于临时存储的非响应式状态（例如监听scrollView的offset来用于判断，如果将其存入@State中会影响页面计算导致性能问题）
   
 ### 中间件生态
 - ⏳ **ThunkMiddleware**：处理异步任务和副作用
@@ -38,92 +37,6 @@ dependencies: [
 ```
 
 ### 基础示例（5分钟上手）
-```swift
-import SwiftUI
-import SwiftUIRedux
-
-struct BasicCounterView: View {
-    @StateObject private var store = StoreFactory.createStore(feature: BasicCounterFeature.self)
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            CounterDisplay(store: store)
-            CounterButtons(store: store)
-            InputField(store: store)
-        }
-        .navigationTitle("基础计数器")
-    }
-}
-
-private struct CounterDisplay: View {
-    let store: Store<BasicCounterFeature>
-    
-    var body: some View {
-        VStack {
-            Text("当前计数: \(store.state.count)")
-                .font(.largeTitle)
-            Text("输入内容: \(store.state.inputString)")
-                .foregroundStyle(.secondary)
-        }
-    }
-}
-
-private struct CounterButtons: View {
-    let store: Store<BasicCounterFeature>
-    
-    var body: some View {
-        HStack(spacing: 20) {
-            Button("−") { store.send(.decrement) }
-                .buttonStyle(CircleButtonStyle(color: .red))
-            
-            Button("+") { store.send(.increment) }
-                .buttonStyle(CircleButtonStyle(color: .green))
-        }
-    }
-}
-
-private struct InputField: View {
-    let store: Store<BasicCounterFeature>
-    
-    var body: some View {
-        TextField("请输入内容", text: store.binding(for: \.inputString, action: .updateInput))
-            .textFieldStyle(.roundedBorder)
-            .padding(.horizontal)
-    }
-}
-
-struct BasicCounterFeature: Feature {
-    struct State: Equatable {
-        var count = 0
-        var inputString: String = ""
-    }
-
-    enum Action: Equatable {
-        case increment
-        case decrement
-    }
-
-    struct Reducer: ReducerProtocol {
-        func reduce(oldState: State, action: Action) -> State {
-            var state = oldState
-            switch action {
-            case .increment:
-                state.count += 1
-            case .decrement:
-                state.count -= 1
-            }
-            return state
-        }
-    }
-
-    static func initialState() -> State { State() }
-    static func createReducer() -> Reducer { Reducer() }
-}
-```
-
-## 🔥 核心功能详解
-
-### 状态绑定
 ```swift
 import SwiftUI
 import SwiftUIRedux
@@ -182,7 +95,44 @@ struct BasicCounterFeature: Feature {
 }
 ```
 
-### 异步处理（优化示例）
+## 🔥 核心功能详解
+
+### 状态绑定
+
+使用store.inputString可以直接获取Binging类型，相当与@State的$inputString。因为有的控件需要Binding参数，如果使用Action方式的话就非常麻烦。虽然这样可能会破坏一些Redux的思想，但是在实际中很方便。
+
+```swift
+
+struct BasicCounterView: View {
+    @StateObject private var store: Store<BasicCounterFeature> = StoreFactory.createStore()
+
+    var body: some View {
+        // ...
+        Text("Input string: \(store.state.inputString)")
+
+        // ...
+        TextField("Please input something", text: store.inputString)
+            .padding()
+    }
+}
+
+struct BasicCounterFeature: Feature {
+    struct State: Equatable {
+                // ...
+        var inputString: String = ""
+    }
+
+    enum Action: Equatable {
+            // ...
+    }
+            // ...
+}
+```
+
+### 异步处理
+
+一般使用store send和dispatch是同步的，并且修改状态会自动在主线程中完成，所以可以在Task中直接调用store.send和dispatch，这样不需要用户自己再返回主线程调用。要处理异步的话需要借助ThunkMiddleware和ThunkEffectAction来完成，具体用法如下：
+
 ```swift
 import SwiftUI
 import SwiftUIRedux
@@ -206,8 +156,6 @@ struct EffectCounterView: View {
             }
             .disabled(store.state.isLoading)
         }
-        .animation(.spring(), value: store.state.isLoading)
-        .navigationTitle("Async Effect Example")
     }
 }
 
@@ -273,7 +221,70 @@ struct EffectCounterFeature: Feature {
 
 ```
 
-### 中间件系统（新增配置示例）
+### 不需要刷新页面的状态
+
+现在store里面存储的state是影响页面刷新的，然后我们有时候会遇到一些不需要刷新页面但是需要临时存下来用于某些判断的值，例如scrollView的offset等等。这个时候就可以使用store的InternalState来进行存储，具体用法如下：
+
+```swift
+import SwiftUI
+import SwiftUIRedux
+
+struct InternalStateExampleView: View {
+    // 初始化的时候需要创建一个InternalState给store，因为这个属性是optional的。
+    @StateObject private var store: Store<MixedStateFeature> = StoreFactory.createStore(internalState: MixedStateFeature.InternalState())
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Published State: \(store.state.publishedCount)")
+                .font(.title)
+
+            // 直接修改notPublishedCount不会触发页面刷新
+            Text("Not published State: \(store.internalState?.notPublishedCount ?? 0)")
+                .font(.title)
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 20) {
+                Button("Published +1") { store.send(.incrementPublished) }
+
+                Button("Published -1") { store.send(.decrementPublished) }
+            }
+
+            Divider().padding()
+
+            // 这里修改状态不会影响页面显示的数据
+            HStack(spacing: 20) {
+                Button("Not published +1") { store.internalState?.notPublishedCount += 1 }
+                Button("Not published -1") { store.internalState?.notPublishedCount -= 1 }
+            }
+
+            Button("Reset All") {
+                store.send(.reset)
+                store.internalState?.notPublishedCount = 0
+            }
+        }
+        .navigationTitle("Combined State Example")
+    }
+}
+
+struct MixedStateFeature: Feature {
+    struct State {
+        var publishedCount = 0
+    }
+    
+    // 创建InternalState
+    struct InternalState {
+        var notPublishedCount = 0
+    }
+
+    // ...
+}
+
+```
+
+### 中间件系统
+
+对于一些额外的需求，例如打印Action和State的各种信息，需要在某个Action进行其他的一些操作。这样就需要借助Middleware来完成，库里默认提供了几种Middleware，下面展示其一些基本用法：
+
 ```swift
 import SwiftUI
 import SwiftUIRedux
@@ -286,6 +297,7 @@ struct MiddlewareView: View {
         let actionPublishedMiddleware = ActionPublisherMiddleware<MiddlewareFeature>()
         
         let middlewares = [AnyMiddleware(actionPublishedMiddleware)]
+        // 这里可以添加需要获取实例的Middleware
         let store = StoreFactory.createStore(otherMiddlewares: middlewares)
         self._store = StateObject(wrappedValue: store)
         
@@ -343,6 +355,8 @@ struct MiddlewareFeature: Feature {
 
     static func initialState() -> State { State() }
     static func createReducer() -> Reducer { Reducer() }
+    
+    // 这里可以添加一些静态的Middleware
     static func middlewares() -> [AnyMiddleware<MiddlewareFeature>] {
         let loggingMiddleware = LoggingMiddleware<MiddlewareFeature>()
         
@@ -354,11 +368,9 @@ struct MiddlewareFeature: Feature {
 ## 🏗 架构最佳实践
 
 ### 状态设计原则
-1. **单一数据源** - 整个应用状态集中存储
-2. **不可变状态** - 始终通过 reducer 返回新状态
-3. **最小化状态** - 只存储必要数据
-4. **本地优先** - 组件私有状态保持使用 `@State`
-5. **组合式开发** - 复杂功能拆分为子模块
+1. **不可变状态** - 始终通过 reducer 返回新状态
+2. **最小化状态** - 只存储必要数据
+3. **Store的标记** - 单个View初始化的Store必须要用@StateObject标记，这样可以防止store重复创建造成问题。
 
 ### 状态类型指南
 | 状态类型         | 使用场景                          | 更新机制         |

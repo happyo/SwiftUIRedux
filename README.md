@@ -1,26 +1,29 @@
 # SwiftUIRedux State Management Library
 
+[![Swift 6.0](https://img.shields.io/badge/Swift-6.0+-orange.svg)](https://swift.org)  
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
+[![Build Status](https://img.shields.io/github/actions/workflow/status/happyo/SwiftUIRedux/ci.yml?branch=main)](https://github.com/happyo/SwiftUIRedux/actions)  
+
 [English](README.md) | [中文版](README.zh.md)
 
-**SwiftUIRedux** is a modern state management library designed for SwiftUI applications, combining Redux core concepts with Swift's type safety. Inspired by [Redux] and [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture). Offers a lighter-weight implementation than similar frameworks while covering 90% of common state management scenarios.
+**SwiftUIRedux** is a modern state management library designed specifically for SwiftUI, seamlessly combining Redux core patterns with Swift's type safety. Inspired by [Redux] and [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture), it provides a more lightweight and efficient solution than similar frameworks, covering 90% of SwiftUI state management scenarios.
 
 ## 🌟 Core Features
 
-### Foundation
-- 🚀 **Strict Unidirectional Flow**: Enforces Action → Reducer → State lifecycle
-- 🛡️ **Type Safety**: Full type inference from Action to State changes
-- ⚡️ **Efficient Rendering**: Smart diffing update mechanism with SwiftUI
+### Architecture Foundation
+- 🚀 **Strict Unidirectional Data Flow**: Enforces Action → Reducer → State closed-loop management
+- 🛡️ **Type Safety**: Full type inference from Action definitions to State mutations
 
 ### State Management
-- 🔄 **Two-Way Binding**: Native `store.binding(for:)` support
+- 🔄 **Two-way Binding**: Native SwiftUI two-way binding support for `store.property`
 - 🎭 **Hybrid State**:
-  - **Published State** - Core state that drives view updates
-  - **Internal State** - Non-reactive temporary storage (e.g. scroll offsets)
+  1. **Published State** - Core state driving view updates
+  2. **Internal State** - Non-reactive state for temporary storage (e.g., storing scrollView offset values without affecting performance)
 
 ### Middleware Ecosystem
-- ⏳ **ThunkMiddleware**: Handle async operations and side effects
+- ⏳ **ThunkMiddleware**: Handles async tasks and side effects
 - 📡 **ActionPublisherMiddleware**: Global Action monitoring pipeline
-- 🔍 **LoggingMiddleware**: Development debug logging
+- 🔍 **LoggingMiddleware**: Development debugging with action tracing
 - 🪝 **HookMiddleware**: Custom lifecycle hooks
 
 ## 🚀 Quick Start
@@ -33,7 +36,7 @@ dependencies: [
 ]
 ```
 
-### 5-Minute Tutorial
+### Basic Example (5-Minute Setup)
 ```swift
 import SwiftUI
 import SwiftUIRedux
@@ -46,10 +49,18 @@ struct BasicCounterView: View {
             Text("Current Count: \(store.state.count)")
                 .font(.largeTitle)
             
-            TextField("Input", text: store.inputString)
-                .padding()
+            Text("Input string: \(store.state.inputString)")
+
+            HStack(spacing: 20) {
+                Button("−") { store.send(.decrement) }
+                    .buttonStyle(CircleButtonStyle(color: .red))
+
+                Button("+") { store.send(.increment) }
+                    .buttonStyle(CircleButtonStyle(color: .green))
+            }
             
-            ControlButtons(store: store)
+            TextField("Please input something", text: store.inputString)
+                .padding()
         }
         .navigationTitle("Basic Counter")
     }
@@ -58,7 +69,7 @@ struct BasicCounterView: View {
 struct BasicCounterFeature: Feature {
     struct State: Equatable {
         var count = 0
-        var inputString = ""
+        var inputString: String = ""
     }
 
     enum Action: Equatable {
@@ -70,8 +81,10 @@ struct BasicCounterFeature: Feature {
         func reduce(oldState: State, action: Action) -> State {
             var state = oldState
             switch action {
-            case .increment: state.count += 1
-            case .decrement: state.count -= 1
+            case .increment:
+                state.count += 1
+            case .decrement:
+                state.count -= 1
             }
             return state
         }
@@ -82,74 +95,97 @@ struct BasicCounterFeature: Feature {
 }
 ```
 
-## 🔥 Core Features Deep Dive
+## 🔥 Core Functionality Deep Dive
 
-### State Binding (Enhanced)
+### State Binding
+
+Use `store.inputString` to directly obtain Binding type, equivalent to `@State`'s `$inputString`. While this approach may slightly deviate from pure Redux philosophy, it significantly simplifies real-world usage.
+
 ```swift
-// Native SwiftUI binding integration
-TextField("Input", text: store.inputString)
+struct BasicCounterView: View {
+    @StateObject private var store: Store<BasicCounterFeature> = StoreFactory.createStore()
 
-// Reducer handling
-Reducer { oldState, action in
-    guard case .updateInput(let text) = action else { return oldState }
-    var state = oldState
-    state.inputString = text
-    return state
+    var body: some View {
+        // ...
+        Text("Input string: \(store.state.inputString)")
+
+        // ...
+        TextField("Please input something", text: store.inputString)
+            .padding()
+    }
 }
 ```
 
-### Async Handling (Optimized)
+### Async Processing
+
+Synchronous state updates automatically occur on the main thread. For async operations, use ThunkMiddleware and ThunkEffectAction:
+
 ```swift
 struct EffectCounterFeature: Feature {
-    // State and Action declarations
-    
-    static func createFetchAsyncAction() -> ThunkEffectAction<State, Action> {
-        ThunkEffectAction { dispatch, getState in
-            dispatch(.startLoading)
+    // ... (State and Action definitions)
+
+    static func createFetchAsyncRandomNumberAction() -> ThunkEffectAction<State, Action> {
+        ThunkEffectAction<State, Action> { dispatch, getState in
+            let state = getState()
             
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            let number = Int.random(in: 1...100)
-            dispatch(.setNumber(number))
+            print("Current random number: \(state.randomNumber)")
             
-            dispatch(.endLoading)
+            Task {
+                dispatch(.startLoading)
+                
+                try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+                let randomNumber = Int.random(in: 1...100)
+                dispatch(.setNumber(randomNumber))
+                
+                dispatch(.endLoading)
+            }
         }
     }
-    
-    static func middlewares() -> [AnyMiddleware<Self>] {
-        [AnyMiddleware(ThunkMiddleware())]
-    }
 }
 ```
 
-### Middleware System (Configuration Example)
+### Non-Published State
+
+Store temporary values that don't trigger view updates using InternalState:
+
+```swift
+struct MixedStateFeature: Feature {
+    struct State {
+        var publishedCount = 0
+    }
+    
+    struct InternalState {
+        var notPublishedCount = 0
+    }
+
+    // ... (Other feature components)
+}
+```
+
+### Middleware System
+
+Extend functionality with middleware components:
+
 ```swift
 struct MiddlewareFeature: Feature {
-    static func middlewares() -> [AnyMiddleware<Self>] {
-        let logger = LoggingMiddleware<MiddlewareFeature>()
-        let actionPublisher = ActionPublisherMiddleware<MiddlewareFeature>()
-        
-        return [AnyMiddleware(logger), AnyMiddleware(actionPublisher)]
+    // ... (State and Action definitions)
+    
+    static func middlewares() -> [AnyMiddleware<MiddlewareFeature>] {
+        let loggingMiddleware = LoggingMiddleware<MiddlewareFeature>()
+        return [AnyMiddleware(loggingMiddleware)]
     }
-}
-
-// Usage in View
-.onReceive(middleware.actionPublisher) { action in
-    analytics.track(action)
 }
 ```
 
-## 🏗 Architecture Best Practices
+## 🏗 Architectural Best Practices
 
 ### State Design Principles
-1. **Single Source of Truth** - Centralized application state
-2. **Immutable States** - Always return new state instances
-3. **Minimal State** - Store only essential data
-4. **Local First** - Keep component-private state with `@State`
-5. **Composition** - Break complex features into sub-modules
+1. **Immutable State** - Always return new state through reducers
+2. **Minimal State** - Only store essential data
+3. **Store Ownership** - Mark View-owned stores with `@StateObject` to prevent recreation issues
 
-### State Type Guide
-| State Type        | Usage Scenario                 | Update Mechanism     |
-|-------------------|--------------------------------|----------------------|
-| Published State   | Data requiring view updates    | Modified via Actions |
-| Internal State    | Temporary storage/calculation  | Direct modification  |
-
+### State Type Guidelines
+| State Type         | Usage Scenario                   | Update Mechanism       |
+|--------------------|----------------------------------|------------------------|
+| Published State    | Data requiring view updates      | Modified via Actions   |
+| Internal State     | Temporary storage/intermediate   | Direct modification    |
