@@ -62,6 +62,14 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     public func send(_ effectAction: EffectAction) {
         middlewareChain.process(store: self, action: .effect(effectAction))
     }
+    
+    @MainActor
+    public func send(_ effectAction: EffectAction) async {
+        await withCheckedContinuation { continuation in
+            middlewareChain.process(store: self, action: .effect(effectAction))
+            continuation.resume()
+        }
+    }
 
     public func send(_ action: ReduxAction<T.Action>, animation: Animation?) {
         middlewareChain.process(store: self, action: action, animation: animation)
@@ -74,6 +82,14 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     public func send(_ effectAction: EffectAction, animation: Animation?) {
         middlewareChain.process(store: self, action: .effect(effectAction), animation: animation)
     }
+    
+    @MainActor
+    public func send(_ effectAction: EffectAction, animation: Animation?) async {
+        await withCheckedContinuation { continuation in
+            middlewareChain.process(store: self, action: .effect(effectAction), animation: animation)
+            continuation.resume()
+        }
+    }
 
     public func send(_ action: ReduxAction<T.Action>, transaction: Transaction?) {
         middlewareChain.process(store: self, action: action, transaction: transaction)
@@ -85,6 +101,14 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
 
     public func send(_ effectAction: EffectAction, transaction: Transaction?) {
         middlewareChain.process(store: self, action: .effect(effectAction), transaction: transaction)
+    }
+    
+    @MainActor
+    public func send(_ effectAction: EffectAction, transaction: Transaction?) async {
+        await withCheckedContinuation { continuation in
+            middlewareChain.process(store: self, action: .effect(effectAction), transaction: transaction)
+            continuation.resume()
+        }
     }
 
     public func addMiddleware(_ middleware: AnyMiddleware<T>) {
