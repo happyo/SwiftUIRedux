@@ -80,8 +80,9 @@ struct EffectCounterFeature: Feature {
     // Important, using async must add ThunkMiddleware
     static func middlewares() -> [AnyMiddleware<EffectCounterFeature>] {
         let thunkMiddleware = ThunkMiddleware<EffectCounterFeature>()
-        
-        return [AnyMiddleware(thunkMiddleware)]
+        let loggingMiddleware = LoggingMiddleware<EffectCounterFeature>()
+
+        return [AnyMiddleware(thunkMiddleware), AnyMiddleware(loggingMiddleware)]
     }
 
     static func createFetchAsyncRandomNumberAction() -> ThunkEffectAction<State, Action> {

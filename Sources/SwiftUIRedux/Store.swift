@@ -61,7 +61,6 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
         middlewareChain.process(store: self, action: .effect(effectAction))
     }
     
-    @MainActor
     public func send(_ effectAction: EffectAction) async {
         await middlewareChain.processAsync(store: self, action: effectAction)
     }
@@ -196,11 +195,11 @@ public class MiddlewareChain<T: Feature> {
     }
     
     public func processAsync(store: Store<T>, action: EffectAction) async {
-        var current = head
-        while current != nil {
-            await current?.processAsync(store: store, action: action)
-            current = current?.next
-        }
+        executeBeforeProcessHooks(store: store, action: .effect(action))
+
+        await head?.processAsync(store: store, action: action)
+        
+        executeAfterProcessHooks(store: store, action: .effect(action))
     }
 
     private func executeBeforeProcessHooks(store: Store<T>, action: ReduxAction<T.Action>) {

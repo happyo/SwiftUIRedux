@@ -29,7 +29,7 @@ public extension Middleware {
     }
     
     func processAsync(store: Store<T>, action: EffectAction) async {
-        
+        process(store: store, action: .effect(action))
     }
 }
 
