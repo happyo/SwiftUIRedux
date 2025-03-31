@@ -6,6 +6,18 @@ import SwiftUI
 
 @MainActor
 public class ThunkMiddleware<T: Feature>: Middleware {
+    private func handleAsyncEffect(_ effect: EffectAction, store: Store<T>) async {
+        if let asyncEffect = effect as? any AsyncEffectAction {
+            await asyncEffect.executeAsync(
+                dispatch: { action in
+                    if let action = action as? T.Action {
+                        store.send(.normal(action))
+                    }
+                },
+                getState: { store.state }
+            )
+        }
+    }
     public var next: AnyMiddleware<T>?
 
     public init() {}
@@ -170,6 +182,33 @@ public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
         getState: @escaping @Sendable () -> State
     ) async {
         await _asyncExecute(dispatch, getState)
+    }
+}
+
+@MainActor
+public struct ThunkAsyncAction<State, Action>: AsyncEffectAction {
+    private let _execute: (
+        @escaping @Sendable @MainActor (Action) -> Void,
+        @escaping @Sendable () -> State
+    ) async -> Void
+    
+    public init(
+        execute: @escaping (
+            @escaping @Sendable @MainActor (Action) -> Void,
+            @escaping @Sendable () -> State
+        ) async -> Void
+    ) {
+        self._execute = execute
+    }
+    
+    public func executeAsync(
+        dispatch: @escaping @Sendable @MainActor (Any) -> Void,
+        getState: @escaping @Sendable () -> Any
+    ) async {
+        await _execute(
+            { action in dispatch(action) },
+            { getState() as! State }
+        )
     }
 }
 

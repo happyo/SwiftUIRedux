@@ -4,8 +4,11 @@
 
 import SwiftUI
 
-public protocol EffectAction {
+public protocol EffectAction {}
 
+public protocol AsyncEffectAction: EffectAction {
+    func executeAsync(dispatch: @escaping @Sendable @MainActor (Any) -> Void, 
+                     getState: @escaping @Sendable () -> Any) async
 }
 
 public enum ReduxAction<Action> {
@@ -65,7 +68,16 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     
     @MainActor
     public func send(_ effectAction: EffectAction) async {
-        if let thunkMiddleware = findThunkMiddleware() {
+        if let asyncEffect = effectAction as? any AsyncEffectAction {
+            await asyncEffect.executeAsync(
+                dispatch: { action in
+                    if let action = action as? T.Action {
+                        self.send(.normal(action))
+                    }
+                },
+                getState: { self.state }
+            )
+        } else if let thunkMiddleware = findThunkMiddleware() {
             await thunkMiddleware.processAsync(store: self, action: .effect(effectAction))
         } else {
             await withCheckedContinuation { continuation in
