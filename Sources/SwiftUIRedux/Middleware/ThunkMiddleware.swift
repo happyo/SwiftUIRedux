@@ -95,7 +95,7 @@ public struct ThunkEffectAction<State, Action>: EffectAction {
     
     public init(
         asyncExecute: @escaping (
-            @escaping (Action) -> Void, @escaping () -> State
+            @escaping @MainActor (Action) -> Void, @escaping () -> State
         ) async -> Void
     ) {
         self._execute = { dispatch, getState in
@@ -114,7 +114,7 @@ public struct ThunkEffectAction<State, Action>: EffectAction {
     }
     
     public func executeAsync(
-        dispatch: @escaping (Action) -> Void,
+        dispatch: @escaping @MainActor (Action) -> Void,
         getState: @escaping () -> State
     ) async {
         await _asyncExecute(dispatch, getState)
@@ -145,7 +145,7 @@ public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
     
     public init(
         asyncExecute: @escaping (
-            @escaping (Action, Animation?) -> Void, @escaping () -> State
+            @escaping @MainActor (Action, Animation?) -> Void, @escaping () -> State
         ) async -> Void
     ) {
         self._execute = { dispatch, getState in
@@ -164,7 +164,7 @@ public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
     }
     
     public func executeAsync(
-        dispatch: @escaping (Action, Animation?) -> Void,
+        dispatch: @escaping @MainActor (Action, Animation?) -> Void,
         getState: @escaping () -> State
     ) async {
         await _asyncExecute(dispatch, getState)
@@ -195,7 +195,7 @@ public struct ThunkTransactionEffectAction<State, Action>: EffectAction {
     
     public init(
         asyncExecute: @escaping (
-            @escaping (Action, Transaction?) -> Void, @escaping () -> State
+            @escaping @MainActor (Action, Transaction?) -> Void, @escaping () -> State
         ) async -> Void
     ) {
         self._execute = { dispatch, getState in
@@ -214,7 +214,7 @@ public struct ThunkTransactionEffectAction<State, Action>: EffectAction {
     }
     
     public func executeAsync(
-        dispatch: @escaping (Action, Transaction?) -> Void,
+        dispatch: @escaping @MainActor (Action, Transaction?) -> Void,
         getState: @escaping () -> State
     ) async {
         await _asyncExecute(dispatch, getState)
