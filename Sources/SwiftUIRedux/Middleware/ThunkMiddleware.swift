@@ -6,23 +6,6 @@ import SwiftUI
 
 @MainActor
 public class ThunkMiddleware<T: Feature>: Middleware {
-    private func handleAsyncEffect(_ effect: EffectAction, store: Store<T>) async {
-        if let asyncEffect = effect as? any AsyncEffectAction {
-            await asyncEffect.executeAsync(
-                dispatch: { [weak store] action in
-                    guard let store = store else { return }
-                    if let action = action as? T.Action {
-                        Task { @MainActor in
-                            store.send(.normal(action))
-                        }
-                    }
-                },
-                getState: { [weak store] in
-                    return store?.state
-                }
-            )
-        }
-    }
     public var next: AnyMiddleware<T>?
 
     public init() {}
@@ -57,33 +40,16 @@ public class ThunkMiddleware<T: Feature>: Middleware {
         }
     }
     
-    public func processAsync(store: Store<T>, action: ReduxAction<T.Action>) async {
-        switch action {
-        case .normal:
-            break
-        case .effect(let effect):
-            if let effectAction = effect as? ThunkEffectAction<T.State, T.Action> {
-                await effectAction.executeAsync(
-                    dispatch: { action in
-                        store.send(.normal(action))
-                    },
-                    getState: {
-                        store.state
-                    }
-                )
-            } else if let animationEffectAction = effect as? ThunkAnimationEffectAction<T.State, T.Action> {
-                await animationEffectAction.executeAsync { action, animation in
-                    store.send(.normal(action), animation: animation)
-                } getState: {
+    public func processAsync(store: Store<T>, action: EffectAction) async {
+        if let asyncAction = action as? AsyncEffectAction<T.State, T.Action> {
+            await asyncAction.executeAsync(
+                dispatch: { action in
+                    store.send(.normal(action))
+                },
+                getState: {
                     store.state
                 }
-            } else if let transactionEffectAction = effect as? ThunkTransactionEffectAction<T.State, T.Action> {
-                await transactionEffectAction.executeAsync { action, transaction in
-                    store.send(.normal(action), transaction: transaction)
-                } getState: {
-                    store.state
-                }
-            }
+            )
         }
     }
 }
@@ -135,29 +101,26 @@ public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
 }
 
 @MainActor
-public struct ThunkAsyncAction<State, Action>: AsyncEffectAction {
+public struct AsyncEffectAction<State, Action>: EffectAction {
     private let _execute: (
         @escaping @Sendable @MainActor (Action) -> Void,
-        @escaping @Sendable () -> State
+        @escaping @Sendable @MainActor () -> State
     ) async -> Void
     
     public init(
         execute: @escaping (
             @escaping @Sendable @MainActor (Action) -> Void,
-            @escaping @Sendable () -> State
+            @escaping @Sendable @MainActor () -> State
         ) async -> Void
     ) {
         self._execute = execute
     }
     
     public func executeAsync(
-        dispatch: @escaping @Sendable @MainActor (Any) -> Void,
-        getState: @escaping @Sendable () -> Any
+        dispatch: @escaping @Sendable @MainActor (Action) -> Void,
+        getState: @escaping @Sendable @MainActor () -> State
     ) async {
-        await _execute(
-            { action in dispatch(action) },
-            { getState() as! State }
-        )
+        await _execute(dispatch, getState)
     }
 }
 

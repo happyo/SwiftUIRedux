@@ -4,12 +4,7 @@
 
 import SwiftUI
 
-public protocol EffectAction {}
-
-public protocol AsyncEffectAction: EffectAction {
-    func executeAsync(dispatch: @escaping @Sendable @MainActor (Any) -> Void, 
-                     getState: @escaping @Sendable () -> Any) async
-}
+public protocol EffectAction: Sendable {}
 
 public enum ReduxAction<Action> {
     case normal(Action)
@@ -68,34 +63,7 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     
     @MainActor
     public func send(_ effectAction: EffectAction) async {
-        if let asyncEffect = effectAction as? any AsyncEffectAction {
-            await asyncEffect.executeAsync(
-                dispatch: { action in
-                    if let action = action as? T.Action {
-                        self.send(.normal(action))
-                    }
-                },
-                getState: { self.state }
-            )
-        } else if let thunkMiddleware = findThunkMiddleware() {
-            await thunkMiddleware.processAsync(store: self, action: .effect(effectAction))
-        } else {
-            await withCheckedContinuation { continuation in
-                middlewareChain.process(store: self, action: .effect(effectAction))
-                continuation.resume()
-            }
-        }
-    }
-    
-    private func findThunkMiddleware() -> ThunkMiddleware<T>? {
-        var current = middlewareChain.head
-        while current != nil {
-            if let thunk = current as? ThunkMiddleware<T> {
-                return thunk
-            }
-            current = current?.next
-        }
-        return nil
+        await middlewareChain.processAsync(store: self, action: effectAction)
     }
 
     public func send(_ action: ReduxAction<T.Action>, animation: Animation?) {
@@ -225,6 +193,14 @@ public class MiddlewareChain<T: Feature> {
         }
 
         executeAfterProcessHooks(store: store, action: action)
+    }
+    
+    public func processAsync(store: Store<T>, action: EffectAction) async {
+        var current = head
+        while current != nil {
+            await current?.processAsync(store: store, action: action)
+            current = current?.next
+        }
     }
 
     private func executeBeforeProcessHooks(store: Store<T>, action: ReduxAction<T.Action>) {
