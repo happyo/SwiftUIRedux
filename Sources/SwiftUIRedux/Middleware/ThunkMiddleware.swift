@@ -9,12 +9,18 @@ public class ThunkMiddleware<T: Feature>: Middleware {
     private func handleAsyncEffect(_ effect: EffectAction, store: Store<T>) async {
         if let asyncEffect = effect as? any AsyncEffectAction {
             await asyncEffect.executeAsync(
-                dispatch: { action in
+                dispatch: { [weak store] action in
+                    guard let store = store else { return }
                     if let action = action as? T.Action {
-                        store.send(.normal(action))
+                        Task { @MainActor in
+                            store.send(.normal(action))
+                        }
                     }
                 },
-                getState: { store.state }
+                getState: { [weak store] in
+                    guard let store = store else { return store.state }
+                    return store.state
+                }
             )
         }
     }
