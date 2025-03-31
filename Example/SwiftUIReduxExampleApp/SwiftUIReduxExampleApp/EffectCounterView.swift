@@ -27,13 +27,13 @@ struct EffectCounterView: View {
                     .disabled(store.state.isLoading)
                     .buttonStyle(BorderedButtonStyle(tint: .blue))
                     
-//                    Button("Get Random Number (Async)") {
-//                        Task {
-//                            await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffect())
-//                        }
-//                    }
-//                    .disabled(store.state.isLoading)
-//                    .buttonStyle(BorderedButtonStyle(tint: .green))
+                    Button("Get Random Number (Async)") {
+                        Task {
+                            await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffectAnimation())
+                        }
+                    }
+                    .disabled(store.state.isLoading)
+                    .buttonStyle(BorderedButtonStyle(tint: .green))
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -112,6 +112,21 @@ struct EffectCounterFeature: Feature {
             try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
             let randomNumber = Int.random(in: 1...100)
             dispatch(.setNumber(randomNumber))
+        }
+    }
+    
+    static func createFetchAsyncRandomNumberActionWithAsyncEffectAnimation() -> AsyncAnimationEffectAction<State, Action> {
+        AsyncAnimationEffectAction<State, Action> { dispatch, getState in
+            let state = getState()
+            print("Current random number (Async): \(state.randomNumber)")
+            
+            dispatch(.startLoading, .default)
+
+            try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+            let randomNumber = Int.random(in: 1...100)
+            dispatch(.setNumber(randomNumber), .default)
+            
+            dispatch(.endLoading, .default)
         }
     }
 }

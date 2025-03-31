@@ -50,6 +50,24 @@ public class ThunkMiddleware<T: Feature>: Middleware {
                     store.state
                 }
             )
+        } else if let asyncAnimationAction = action as? AsyncAnimationEffectAction<T.State, T.Action> {
+            await asyncAnimationAction.executeAsync(
+                dispatch: { action, animation in
+                    store.send(.normal(action), animation: animation)
+                },
+                getState: {
+                    store.state
+                }
+            )
+        } else if let asyncTransactionAction = action as? AsyncTransactionEffectAction<T.State, T.Action> {
+            await asyncTransactionAction.executeAsync(
+                dispatch: { action, transaction in
+                    store.send(.normal(action), transaction: transaction)
+                },
+                getState: {
+                    store.state
+                }
+            )
         }
     }
 }
@@ -144,5 +162,53 @@ public struct ThunkTransactionEffectAction<State, Action>: EffectAction {
         getState: @escaping () -> State
     ) {
         _execute(dispatch, getState)
+    }
+}
+
+@MainActor
+public struct AsyncAnimationEffectAction<State, Action>: EffectAction {
+    private let _execute: (
+        @escaping @Sendable @MainActor (Action, Animation?) -> Void,
+        @escaping @Sendable @MainActor () -> State
+    ) async -> Void
+    
+    public init(
+        execute: @escaping (
+            @escaping @Sendable @MainActor (Action, Animation?) -> Void,
+            @escaping @Sendable @MainActor () -> State
+        ) async -> Void
+    ) {
+        self._execute = execute
+    }
+    
+    public func executeAsync(
+        dispatch: @escaping @Sendable @MainActor (Action, Animation?) -> Void,
+        getState: @escaping @Sendable @MainActor () -> State
+    ) async {
+        await _execute(dispatch, getState)
+    }
+}
+
+@MainActor
+public struct AsyncTransactionEffectAction<State, Action>: EffectAction {
+    private let _execute: (
+        @escaping @Sendable @MainActor (Action, Transaction?) -> Void,
+        @escaping @Sendable @MainActor () -> State
+    ) async -> Void
+    
+    public init(
+        execute: @escaping (
+            @escaping @Sendable @MainActor (Action, Transaction?) -> Void,
+            @escaping @Sendable @MainActor () -> State
+        ) async -> Void
+    ) {
+        self._execute = execute
+    }
+    
+    public func executeAsync(
+        dispatch: @escaping @Sendable @MainActor (Action, Transaction?) -> Void,
+        getState: @escaping @Sendable @MainActor () -> State
+    ) async {
+        await _execute(dispatch, getState)
     }
 }
