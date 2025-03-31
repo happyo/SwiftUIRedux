@@ -4,8 +4,6 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
 [![Build Status](https://img.shields.io/github/actions/workflow/status/happyo/SwiftUIRedux/ci.yml?branch=main)](https://github.com/happyo/SwiftUIRedux/actions)  
 
-[English](README.md) | [中文版](README.zh.md)
-
 **SwiftUIRedux** is a modern state management library designed specifically for SwiftUI, seamlessly combining Redux core patterns with Swift's type safety. Inspired by [Redux] and [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture), it provides a more lightweight and efficient solution than similar frameworks, covering 90% of SwiftUI state management scenarios.
 
 ## 🌟 Core Features
@@ -118,7 +116,7 @@ struct BasicCounterView: View {
 
 ### Async Processing
 
-Synchronous state updates automatically occur on the main thread. For async operations, use ThunkMiddleware and ThunkEffectAction:
+Synchronous state updates automatically occur on the main thread. For async operations, use ThunkMiddleware and ThunkEffectAction, or use AsyncEffectAction to await:
 
 ```swift
 struct EffectCounterFeature: Feature {
@@ -139,6 +137,33 @@ struct EffectCounterFeature: Feature {
                 
                 dispatch(.endLoading)
             }
+        }
+    }
+
+    static func createFetchAsyncRandomNumberActionWithAsyncEffect() -> AsyncEffectAction<State, Action> {
+        AsyncEffectAction<State, Action> { dispatch, getState in
+            let state = getState()
+            print("Current random number (Async): \(state.randomNumber)")
+            
+            
+            try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+            let randomNumber = Int.random(in: 1...100)
+            dispatch(.setNumber(randomNumber))
+        }
+    }
+    
+    static func createFetchAsyncRandomNumberActionWithAsyncEffectAnimation() -> AsyncAnimationEffectAction<State, Action> {
+        AsyncAnimationEffectAction<State, Action> { dispatch, getState in
+            let state = getState()
+            print("Current random number (Async): \(state.randomNumber)")
+            
+            dispatch(.startLoading, .default)
+
+            try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+            let randomNumber = Int.random(in: 1...100)
+            dispatch(.setNumber(randomNumber), .default)
+            
+            dispatch(.endLoading, .default)
         }
     }
 }
