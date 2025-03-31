@@ -5,34 +5,45 @@ struct EffectCounterView: View {
     @StateObject private var store: Store<EffectCounterFeature> = StoreFactory.createStore()
 
     var body: some View {
-        VStack(spacing: 20) {
-            if store.state.isLoading {
-                ProgressView()
-                    .scaleEffect(2.0)
-            } else {
-                Text("Random Number: \(store.state.randomNumber)")
-                    .font(.largeTitle)
-                    .transition(.scale.combined(with: .opacity))
+        List {
+            Section {
+                if store.state.isLoading {
+                    ProgressView()
+                        .scaleEffect(2.0)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Text("Random Number: \(store.state.randomNumber)")
+                        .font(.largeTitle)
+                        .frame(maxWidth: .infinity)
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
-
-            HStack(spacing: 20) {
-                Button("Get Random Number (Thunk)") {
-                    store.send(EffectCounterFeature.createFetchAsyncRandomNumberAction())
-                }
-                .disabled(store.state.isLoading)
-                .buttonStyle(BorderedButtonStyle(tint: .blue))
-                
-                Button("Get Random Number (Async)") {
-                    Task {
-                        await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffect())
+            
+            Section {
+                HStack(spacing: 20) {
+                    Button("Get Random Number (Thunk)") {
+                        store.send(EffectCounterFeature.createFetchAsyncRandomNumberAction())
                     }
+                    .disabled(store.state.isLoading)
+                    .buttonStyle(BorderedButtonStyle(tint: .blue))
+                    
+//                    Button("Get Random Number (Async)") {
+//                        Task {
+//                            await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffect())
+//                        }
+//                    }
+//                    .disabled(store.state.isLoading)
+//                    .buttonStyle(BorderedButtonStyle(tint: .green))
                 }
-                .disabled(store.state.isLoading)
-                .buttonStyle(BorderedButtonStyle(tint: .green))
+                .frame(maxWidth: .infinity)
             }
         }
+        .listStyle(InsetGroupedListStyle())
         .animation(.spring(), value: store.state.isLoading)
         .navigationTitle("Async Effect Example")
+        .refreshable {
+            await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffect())
+        }
     }
 }
 
@@ -96,13 +107,10 @@ struct EffectCounterFeature: Feature {
             let state = getState()
             print("Current random number (Async): \(state.randomNumber)")
             
-            dispatch(.startLoading)
             
             try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
             let randomNumber = Int.random(in: 1...100)
             dispatch(.setNumber(randomNumber))
-            
-            dispatch(.endLoading)
         }
     }
 }
