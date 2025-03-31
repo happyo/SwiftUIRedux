@@ -30,7 +30,7 @@
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/happyo/SwiftUIRedux.git", from: "1.0.7")
+    .package(url: "https://github.com/happyo/SwiftUIRedux.git", from: "1.0.8")
 ]
 ```
 
