@@ -65,10 +65,25 @@ public class Store<T: Feature>: ObservableObject, StoreProtocol {
     
     @MainActor
     public func send(_ effectAction: EffectAction) async {
-        await withCheckedContinuation { continuation in
-            middlewareChain.process(store: self, action: .effect(effectAction))
-            continuation.resume()
+        if let thunkMiddleware = findThunkMiddleware() {
+            await thunkMiddleware.processAsync(store: self, action: .effect(effectAction))
+        } else {
+            await withCheckedContinuation { continuation in
+                middlewareChain.process(store: self, action: .effect(effectAction))
+                continuation.resume()
+            }
         }
+    }
+    
+    private func findThunkMiddleware() -> ThunkMiddleware<T>? {
+        var current = middlewareChain.head
+        while current != nil {
+            if let thunk = current as? ThunkMiddleware<T> {
+                return thunk
+            }
+            current = current?.next
+        }
+        return nil
     }
 
     public func send(_ action: ReduxAction<T.Action>, animation: Animation?) {

@@ -39,6 +39,36 @@ public class ThunkMiddleware<T: Feature>: Middleware {
             }
         }
     }
+    
+    public func processAsync(store: Store<T>, action: ReduxAction<T.Action>) async {
+        switch action {
+        case .normal:
+            break
+        case .effect(let effect):
+            if let effectAction = effect as? ThunkEffectAction<T.State, T.Action> {
+                await effectAction.executeAsync(
+                    dispatch: { action in
+                        store.send(.normal(action))
+                    },
+                    getState: {
+                        store.state
+                    }
+                )
+            } else if let animationEffectAction = effect as? ThunkAnimationEffectAction<T.State, T.Action> {
+                await animationEffectAction.executeAsync { action, animation in
+                    store.send(.normal(action), animation: animation)
+                } getState: {
+                    store.state
+                }
+            } else if let transactionEffectAction = effect as? ThunkTransactionEffectAction<T.State, T.Action> {
+                await transactionEffectAction.executeAsync { action, transaction in
+                    store.send(.normal(action), transaction: transaction)
+                } getState: {
+                    store.state
+                }
+            }
+        }
+    }
 }
 
 @MainActor
@@ -47,6 +77,10 @@ public struct ThunkEffectAction<State, Action>: EffectAction {
         (
             @escaping (Action) -> Void, @escaping () -> State
         ) -> Void
+    private let _asyncExecute:
+        (
+            @escaping (Action) -> Void, @escaping () -> State
+        ) async -> Void
 
     public init(
         execute: @escaping (
@@ -54,6 +88,22 @@ public struct ThunkEffectAction<State, Action>: EffectAction {
         ) -> Void
     ) {
         self._execute = execute
+        self._asyncExecute = { dispatch, getState in
+            execute(dispatch, getState)
+        }
+    }
+    
+    public init(
+        asyncExecute: @escaping (
+            @escaping (Action) -> Void, @escaping () -> State
+        ) async -> Void
+    ) {
+        self._execute = { dispatch, getState in
+            Task {
+                await asyncExecute(dispatch, getState)
+            }
+        }
+        self._asyncExecute = asyncExecute
     }
 
     public func execute(
@@ -61,6 +111,13 @@ public struct ThunkEffectAction<State, Action>: EffectAction {
         getState: @escaping () -> State
     ) {
         _execute(dispatch, getState)
+    }
+    
+    public func executeAsync(
+        dispatch: @escaping (Action) -> Void,
+        getState: @escaping () -> State
+    ) async {
+        await _asyncExecute(dispatch, getState)
     }
 }
 
@@ -70,6 +127,10 @@ public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
         (
             @escaping (Action, Animation?) -> Void, @escaping () -> State
         ) -> Void
+    private let _asyncExecute:
+        (
+            @escaping (Action, Animation?) -> Void, @escaping () -> State
+        ) async -> Void
 
     public init(
         execute: @escaping (
@@ -77,6 +138,22 @@ public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
         ) -> Void
     ) {
         self._execute = execute
+        self._asyncExecute = { dispatch, getState in
+            execute(dispatch, getState)
+        }
+    }
+    
+    public init(
+        asyncExecute: @escaping (
+            @escaping (Action, Animation?) -> Void, @escaping () -> State
+        ) async -> Void
+    ) {
+        self._execute = { dispatch, getState in
+            Task {
+                await asyncExecute(dispatch, getState)
+            }
+        }
+        self._asyncExecute = asyncExecute
     }
 
     public func execute(
@@ -84,6 +161,13 @@ public struct ThunkAnimationEffectAction<State, Action>: EffectAction {
         getState: @escaping () -> State
     ) {
         _execute(dispatch, getState)
+    }
+    
+    public func executeAsync(
+        dispatch: @escaping (Action, Animation?) -> Void,
+        getState: @escaping () -> State
+    ) async {
+        await _asyncExecute(dispatch, getState)
     }
 }
 
@@ -93,6 +177,10 @@ public struct ThunkTransactionEffectAction<State, Action>: EffectAction {
         (
             @escaping (Action, Transaction?) -> Void, @escaping () -> State
         ) -> Void
+    private let _asyncExecute:
+        (
+            @escaping (Action, Transaction?) -> Void, @escaping () -> State
+        ) async -> Void
 
     public init(
         execute: @escaping (
@@ -100,6 +188,22 @@ public struct ThunkTransactionEffectAction<State, Action>: EffectAction {
         ) -> Void
     ) {
         self._execute = execute
+        self._asyncExecute = { dispatch, getState in
+            execute(dispatch, getState)
+        }
+    }
+    
+    public init(
+        asyncExecute: @escaping (
+            @escaping (Action, Transaction?) -> Void, @escaping () -> State
+        ) async -> Void
+    ) {
+        self._execute = { dispatch, getState in
+            Task {
+                await asyncExecute(dispatch, getState)
+            }
+        }
+        self._asyncExecute = asyncExecute
     }
 
     public func execute(
@@ -107,5 +211,12 @@ public struct ThunkTransactionEffectAction<State, Action>: EffectAction {
         getState: @escaping () -> State
     ) {
         _execute(dispatch, getState)
+    }
+    
+    public func executeAsync(
+        dispatch: @escaping (Action, Transaction?) -> Void,
+        getState: @escaping () -> State
+    ) async {
+        await _asyncExecute(dispatch, getState)
     }
 }
