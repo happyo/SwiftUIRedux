@@ -18,8 +18,7 @@ public class ThunkMiddleware<T: Feature>: Middleware {
                     }
                 },
                 getState: { [weak store] in
-                    guard let store = store else { return () as! State }
-                    return store.state
+                    return store?.state
                 }
             )
         }
