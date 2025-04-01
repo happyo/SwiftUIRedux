@@ -36,6 +36,10 @@ public class ThunkMiddleware<T: Feature>: Middleware {
                 } getState: {
                     store.state
                 }
+            } else {
+                Task {
+                    await processAsync(store: store, action: effect)
+                }
             }
         }
     }

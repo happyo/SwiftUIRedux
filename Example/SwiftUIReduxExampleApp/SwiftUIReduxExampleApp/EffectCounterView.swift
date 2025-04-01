@@ -5,22 +5,19 @@ struct EffectCounterView: View {
     @StateObject private var store: Store<EffectCounterFeature> = StoreFactory.createStore()
 
     var body: some View {
-        List {
-            Section {
-                if store.state.isLoading {
-                    ProgressView()
-                        .scaleEffect(2.0)
-                        .frame(maxWidth: .infinity)
-                } else {
-                    Text("Random Number: \(store.state.randomNumber)")
-                        .font(.largeTitle)
-                        .frame(maxWidth: .infinity)
-                        .transition(.scale.combined(with: .opacity))
-                }
+        VStack {
+            if store.state.isLoading {
+                ProgressView()
+                    .id(1)
+            } else {
+                Text("Random Number: \(store.state.randomNumber)")
+                    .font(.largeTitle)
+                    .frame(maxWidth: .infinity)
+                    .transition(.scale.combined(with: .opacity))
             }
             
-            Section {
-                HStack(spacing: 20) {
+            List {
+                Section {
                     Button("Get Random Number (Thunk)") {
                         store.send(EffectCounterFeature.createFetchAsyncRandomNumberAction())
                     }
@@ -28,6 +25,12 @@ struct EffectCounterView: View {
                     .buttonStyle(BorderedButtonStyle(tint: .blue))
                     
                     Button("Get Random Number (Async)") {
+                        store.send(.effect(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffectAnimation()))
+                    }
+                    .disabled(store.state.isLoading)
+                    .buttonStyle(BorderedButtonStyle(tint: .green))
+                    
+                    Button("Get Random Number (Async with await)") {
                         Task {
                             await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffectAnimation())
                         }
@@ -35,14 +38,13 @@ struct EffectCounterView: View {
                     .disabled(store.state.isLoading)
                     .buttonStyle(BorderedButtonStyle(tint: .green))
                 }
-                .frame(maxWidth: .infinity)
             }
-        }
-        .listStyle(InsetGroupedListStyle())
-        .animation(.spring(), value: store.state.isLoading)
-        .navigationTitle("Async Effect Example")
-        .refreshable {
-            await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffect())
+            .listStyle(InsetGroupedListStyle())
+            .animation(.spring(), value: store.state.isLoading)
+            .navigationTitle("Async Effect Example")
+            .refreshable {
+                await store.send(EffectCounterFeature.createFetchAsyncRandomNumberActionWithAsyncEffect())
+            }
         }
     }
 }
