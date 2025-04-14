@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftUIRedux
 
 struct InternalStateExampleView: View {
-    @StateObject private var store: Store<MixedStateFeature> = StoreFactory.createStore(internalState: MixedStateFeature.InternalState())
+    @StateObject private var store: Store<MixedStateFeature> = StoreFactory.createStore(
+        internalState: MixedStateFeature.InternalState())
 
     var body: some View {
         VStack(spacing: 20) {
@@ -26,6 +27,13 @@ struct InternalStateExampleView: View {
                 Button("Not published -1") { store.internalState?.notPublishedCount -= 1 }
             }
 
+            HStack(spacing: 20) {
+                Button("Add count less than max count") {
+                    store.send(MixedStateFeature.createAddCountLessThanMaxAction())
+                }
+                .buttonStyle(BorderedButtonStyle(tint: .blue))
+            }
+
             Button("Reset All") {
                 store.send(.reset)
                 store.internalState?.notPublishedCount = 0
@@ -40,9 +48,10 @@ struct MixedStateFeature: Feature {
     struct State {
         var publishedCount = 0
     }
-    
+
     struct InternalState {
         var notPublishedCount = 0
+        var maxCount: Int = 5
     }
 
     enum Action {
@@ -68,4 +77,24 @@ struct MixedStateFeature: Feature {
 
     static func initialState() -> State { State() }
     static func createReducer() -> Reducer { Reducer() }
+    static func middlewares() -> [AnyMiddleware<MixedStateFeature>] {
+        return [AnyMiddleware(ThunkMiddleware())]
+    }
+
+    static func createAddCountLessThanMaxAction()-> ThunkEffectWithInternalStateAction<State, Action, InternalState> {
+        ThunkEffectWithInternalStateAction<State, Action, InternalState> { dispatch, getState, getInternalState, setInternalState in
+            let state = getState()
+            let internalState = getInternalState()
+
+            if let maxCount = internalState?.maxCount {
+                if state.publishedCount < maxCount {
+                    withAnimation {
+                        dispatch(.incrementPublished)
+                    }
+                } else {
+                    print("Cannot increment, published count is already at max count.")
+                }
+            }
+        }
+    }
 }
