@@ -182,8 +182,30 @@ struct MixedStateFeature: Feature {
     struct InternalState {
         var notPublishedCount = 0
     }
+    
+    static func middlewares() -> [AnyMiddleware<MixedStateFeature>] {
+        return [AnyMiddleware(ThunkMiddleware())]
+    }
+
+    static func createAddCountLessThanMaxAction()-> ThunkEffectWithInternalStateAction<State, Action, InternalState> {
+        ThunkEffectWithInternalStateAction<State, Action, InternalState> { dispatch, getState, getInternalState, setInternalState in
+            let state = getState()
+            let internalState = getInternalState()
+
+            if let maxCount = internalState?.maxCount {
+                if state.publishedCount < maxCount {
+                    withAnimation {
+                        dispatch(.incrementPublished)
+                    }
+                } else {
+                    print("Cannot increment, published count is already at max count.")
+                }
+            }
+        }
+    }
 
     // ... (Other feature components)
+    
 }
 ```
 
