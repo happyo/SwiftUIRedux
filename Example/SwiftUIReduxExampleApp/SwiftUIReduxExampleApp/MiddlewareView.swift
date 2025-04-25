@@ -9,8 +9,8 @@ import SwiftUI
 import SwiftUIRedux
 
 struct MiddlewareView: View {
-    @StateObject private var store: Store<MiddlewareFeature> = StoreFactory.createStore()
-    let actionPublishedMiddleware: ActionPublisherMiddleware<MiddlewareFeature>
+    @StateObject private var store: Store<MiddlewareFeature>
+    @StateObject var actionPublishedMiddleware: ActionPublisherMiddleware<MiddlewareFeature>
     
     init() {
         let actionPublishedMiddleware = ActionPublisherMiddleware<MiddlewareFeature>()
@@ -19,7 +19,7 @@ struct MiddlewareView: View {
         let store = StoreFactory.createStore(otherMiddlewares: middlewares)
         self._store = StateObject(wrappedValue: store)
         
-        self.actionPublishedMiddleware = actionPublishedMiddleware
+        self._actionPublishedMiddleware = StateObject(wrappedValue: actionPublishedMiddleware)
     }
 
     var body: some View {
